@@ -4,8 +4,9 @@ import "./Crowdsale.sol";
 
 contract StormCrowdsale is Crowdsale {
   function StormCrowdsale() {
-    crowdsaleStartBlock; //TODO: set block
-    crowdsaleEndedBlock; //TODO: set block
+    communityRoundStartBlock; // TODO: set block
+    crowdsaleStartBlock;      // TODO: set block
+    crowdsaleEndBlock;        // TODO: set block
 
     ethToTokenConversion = 26950;       // 1 ETH == 26,950 STORM tokens
 
@@ -15,8 +16,8 @@ contract StormCrowdsale is Crowdsale {
     maxCrowdsaleCap = 2137957682; 
     maxContribution = 350;              // maximum contribution during community round is ~$100,000 USD
 
-    uint256 companyTokens = 6775292318; // allocation to company, private presale and users (marketing)
-    maxTokenSupply = maxTokenSupply.sub(companyTokens);     // reduce token supply after company allocation
-    token.mintTokens(msg.sender, companyTokens);            // allocate tokens to company and users for marketing
+    uint companyTokens = 6775292318; // allocation to company, private presale and users (marketing)
+    maxTokenSupply -= companyTokens;    // reduce token supply after company allocation
+    token.mintTokens(msg.sender, companyTokens);  // allocate tokens to company and users for marketing
   }
 }

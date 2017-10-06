@@ -21,7 +21,8 @@ contract Crowdsale is ReentrancyHandling, Owned{
   enum state { pendingStart, communityRound, crowdsale, crowdsaleEnded }
 
   uint public communityRoundStartBlock;
-  uint public crowdsaleEndedBlock;
+  uint public crowdsaleStartBlock;
+  uint public crowdsaleEndBlock;
 
   event CommunityRoundStarted(uint blockNumber);
   event CrowdsaleStarted(uint blockNumber);
@@ -75,10 +76,10 @@ contract Crowdsale is ReentrancyHandling, Owned{
     bool _stateChanged = false;
 
     // end crowdsale once all tokens are sold or run out of time
-    if (block.number > crowdsaleEndedBlock || tokenSold >= maxCrowdsaleCap)
+    if (block.number > crowdsaleEndBlock || tokenSold >= maxCrowdsaleCap)
     {
       if (crowdsaleState != state.crowdsaleEnded) {
-        crowdsaleState = state.CrowdsaleEnded;
+        crowdsaleState = state.crowdsaleEnded;
         CrowdsaleEnded(block.number);
         _stateChanged = true;
       }
@@ -134,11 +135,11 @@ contract Crowdsale is ReentrancyHandling, Owned{
       returnAmount = _amount - contributionAmount;                             // Calculate how much the participant must get back
     }
       
-    contributorList[_contributor].contributionAmount += contributionAmount;   // Add contribution amount to existing contributor
+    contributorList[_contributor].contributionAmount += contributionAmount;     // Add contribution amount to existing contributor
 
     ethRaised += contributionAmount;                                            // Add to eth raised
 
-    uint tokenAmount = contributionAmount * ethToTokenConversion;               // Calculate how much tokens must contributor get
+    uint256 tokenAmount = contributionAmount * ethToTokenConversion;            // Calculate how much tokens must contributor get
 
     if (crowdsaleState == state.communityRound) {                               
       tokenAmount = tokenAmount * 15 / 100 + tokenAmount;                       // 15% discount for community round
@@ -195,7 +196,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   function withdrawRemainingBalanceForManualRecovery() onlyOwner {
     require(this.balance != 0);                                  // Check if there are any eth to claim
-    require(block.number > crowdsaleEndedBlock);                 // Check if crowdsale is over
+    require(block.number > crowdsaleEndBlock);                   // Check if crowdsale is over
     multisigAddress.transfer(this.balance);                      // Withdraw to multisig
   }
 
@@ -216,12 +217,12 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Owner can claim remaining tokens when crowdsale has successfully ended
   //
-  function claimCompanyTokens(address _to, uint256 _amount) onlyOwner {
+  function claimCompanyTokens(address _to) onlyOwner {
     require(crowdsaleState == state.crowdsaleEnded);              // Check if crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
 
-    uint devReward = maxTokenSupply - token.totalSupply();
-    token.mintTokens(_to, devReward);                             // Issue tokens to company
+    uint remainingTokens = maxTokenSupply - token.totalSupply();
+    token.mintTokens(_to, remainingTokens);                       // Issue tokens to company
     ownerHasClaimedTokens = true;                                 // Block further mints from this method
   }
 
@@ -232,13 +233,14 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   //  Before crowdsale starts owner can calibrate blocks of crowdsale stages
   //
-  function setCrowdsaleBlocks( uint _crowdsaleStartBlock, uint _crowdsaleEndedBlock) onlyOwner {
+  function setCrowdsaleBlocks( uint _communityRoundStartBlock, uint _crowdsaleStartBlock, uint _crowdsaleEndBlock) onlyOwner {
     require(crowdsaleState == state.pendingStart);                // Check if crowdsale has started
     require(_crowdsaleStartBlock != 0);                           // Check if any value is 0
-    require(_crowdsaleStartBlock < _crowdsaleEndedBlock);         // Check if crowdsaleEndedBlock is set properly
-    require(_crowdsaleEndedBlock != 0);                           // Check if any value is 0
+    require(_crowdsaleStartBlock < _crowdsaleEndBlock);           // Check if crowdsaleEndBlock is set properly
+    require(_crowdsaleEndBlock != 0);                             // Check if any value is 0
 
-    communityRoundStartBlock = _crowdsaleStartBlock;
-    crowdsaleEndedBlock = crowdsaleEndedBlock;
+    communityRoundStartBlock = _communityRoundStartBlock;
+    crowdsaleStartBlock = _crowdsaleStartBlock;
+    crowdsaleEndBlock = _crowdsaleEndBlock;
   }
 }
