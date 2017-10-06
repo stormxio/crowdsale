@@ -77,7 +77,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     // end crowdsale once all tokens are sold or run out of time
     if (block.number > crowdsaleEndedBlock || tokenSold >= maxCrowdsaleCap)
     {
-      if (crowsaleState != state.crowdsaleEnded) {
+      if (crowdsaleState != state.crowdsaleEnded) {
         crowdsaleState = state.CrowdsaleEnded;
         CrowdsaleEnded(block.number);
         _stateChanged = true;
@@ -85,15 +85,15 @@ contract Crowdsale is ReentrancyHandling, Owned{
     }
     else if (block.number > communityRoundStartBlock) {
       if (tokenSold < maxCommunityRoundCap) {
-        if (crowsaleState != state.communityRound) {
+        if (crowdsaleState != state.communityRound) {
           crowdsaleState = state.communityRound;
           CommunityRoundStarted(block.number);
           _stateChanged = true;
         }
       }
       else {
-        if (crowsaleState != state.crowdsale) {
-          crowsaleState = state.crowdsale;
+        if (crowdsaleState != state.crowdsale) {
+          crowdsaleState = state.crowdsale;
           CrowdsaleStarted(block.number);
           _stateChanged = true;
         }
@@ -232,16 +232,13 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   //  Before crowdsale starts owner can calibrate blocks of crowdsale stages
   //
-  function setCrowdsaleBlocks(uint _communityRoundStartBlock, uint _crowdsaleStartBlock, uint _crowdsaleEndedBlock) onlyOwner {
+  function setCrowdsaleBlocks( uint _crowdsaleStartBlock, uint _crowdsaleEndedBlock) onlyOwner {
     require(crowdsaleState == state.pendingStart);                // Check if crowdsale has started
-    require(_communityRoundStartBlock != 0);                      // Check if any value is 0
-    require(_communityRoundStartBlock < _crowdsaleStartBlock);    // Check if crowdsaleStartBlock is set properly
     require(_crowdsaleStartBlock != 0);                           // Check if any value is 0
     require(_crowdsaleStartBlock < _crowdsaleEndedBlock);         // Check if crowdsaleEndedBlock is set properly
     require(_crowdsaleEndedBlock != 0);                           // Check if any value is 0
 
-    communityRoundStartBlock = _communityRoundStartBlock;
-    crowdsaleStartBlock = _crowdsaleStartBlock;
-    crowdsaleEndedBlock = _crowdsaleEndedBlock;
+    communityRoundStartBlock = _crowdsaleStartBlock;
+    crowdsaleEndedBlock = crowdsaleEndedBlock;
   }
 }

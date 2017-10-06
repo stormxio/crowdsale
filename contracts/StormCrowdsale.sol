@@ -4,7 +4,7 @@ import "./Crowdsale.sol";
 
 contract StormCrowdsale is Crowdsale {
   function StormCrowdsale() {
-    presaleStartBlock; //TODO: set block
+    crowdsaleStartBlock; //TODO: set block
     crowdsaleEndedBlock; //TODO: set block
 
     ethToTokenConversion = 26950;       // 1 ETH == 26,950 STORM tokens
