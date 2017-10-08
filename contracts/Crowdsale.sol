@@ -20,15 +20,15 @@ contract Crowdsale is ReentrancyHandling, Owned{
   state public crowdsaleState = state.pendingStart;
   enum state { pendingStart, communityRound, crowdsale, crowdsaleEnded }
 
-  uint public communityRoundStartBlock;
-  uint public crowdsaleStartBlock;
-  uint public crowdsaleEndBlock;
+  uint public communityRoundStartDate;
+  uint public crowdsaleStartDate;
+  uint public crowdsaleEndDate;
 
-  event CommunityRoundStarted(uint blockNumber);
-  event CrowdsaleStarted(uint blockNumber);
-  event CrowdsaleEnded(uint blockNumber);
+  event CommunityRoundStarted(uint timestamp);
+  event CrowdsaleStarted(uint timestamp);
+  event CrowdsaleEnded(uint timestamp);
 
-  IToken token = IToken(0x0);
+  IToken public token;
   uint ethToTokenConversion;
 
   uint maxCommunityRoundCap;
@@ -36,13 +36,20 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
   uint maxCrowdsaleCap;
 
-  uint tokenSold;
+  uint public tokenSold = 0;
   uint public ethRaised;
 
   address public multisigAddress;
 
-  uint maxTokenSupply;
+  uint public maxTokenSupply;
+  uint companyTokens;
   bool ownerHasClaimedTokens;
+
+  function Crowdsale() {
+    token = IToken(multisigAddress);
+
+    token.mintTokens(multisigAddress, companyTokens);
+  }
 
   //
   // Unnamed function that runs when eth is sent to the contract
@@ -76,26 +83,32 @@ contract Crowdsale is ReentrancyHandling, Owned{
     bool _stateChanged = false;
 
     // end crowdsale once all tokens are sold or run out of time
-    if (block.number > crowdsaleEndBlock || tokenSold >= maxCrowdsaleCap)
-    {
+    if (block.timestamp > crowdsaleEndDate || tokenSold >= maxCrowdsaleCap) {
       if (crowdsaleState != state.crowdsaleEnded) {
         crowdsaleState = state.crowdsaleEnded;
-        CrowdsaleEnded(block.number);
+        CrowdsaleEnded(block.timestamp);
         _stateChanged = true;
       }
     }
-    else if (block.number > communityRoundStartBlock) {
+    else if (block.timestamp > crowdsaleStartDate) { // move into crowdsale round
+      if (crowdsaleState != state.crowdsale) {
+        crowdsaleState = state.crowdsale;
+        CrowdsaleStarted(block.timestamp);
+        _stateChanged = true;
+      }
+    }
+    else if (block.timestamp > communityRoundStartDate) {
       if (tokenSold < maxCommunityRoundCap) {
         if (crowdsaleState != state.communityRound) {
           crowdsaleState = state.communityRound;
-          CommunityRoundStarted(block.number);
+          CommunityRoundStarted(block.timestamp);
           _stateChanged = true;
         }
       }
-      else {
+      else {  // automatically start crowdsale when all community round tokens are sold out
         if (crowdsaleState != state.crowdsale) {
           crowdsaleState = state.crowdsale;
-          CrowdsaleStarted(block.number);
+          CrowdsaleStarted(block.timestamp);
           _stateChanged = true;
         }
       }
@@ -196,29 +209,29 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   function withdrawRemainingBalanceForManualRecovery() onlyOwner {
     require(this.balance != 0);                                  // Check if there are any eth to claim
-    require(block.number > crowdsaleEndBlock);                   // Check if crowdsale is over
+    require(block.timestamp > crowdsaleEndDate);                 // Check if crowdsale is over
     multisigAddress.transfer(this.balance);                      // Withdraw to multisig
   }
 
   //
   // Owner can set multisig address for crowdsale
   //
-  function setMultisigAddress(address _newAddress) onlyOwner{
+  function setMultisigAddress(address _newAddress) onlyOwner {
     multisigAddress = _newAddress;
   }
 
   //
   // Owner can set token address where mints will happen
   //
-  function setToken(address _newAddress) onlyOwner{
+  function setToken(address _newAddress) onlyOwner {
     token = IToken(_newAddress);
   }
 
   //
-  // Owner can claim remaining tokens when crowdsale has successfully ended
+  // Owner can claim remaining tokens when crowdsale ends
   //
   function claimCompanyTokens(address _to) onlyOwner {
-    require(crowdsaleState == state.crowdsaleEnded);              // Check if crowdsale has ended
+    require(crowdsaleState == state.crowdsaleEnded);              // Check crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
 
     uint remainingTokens = maxTokenSupply - token.totalSupply();
@@ -233,14 +246,16 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   //  Before crowdsale starts owner can calibrate blocks of crowdsale stages
   //
-  function setCrowdsaleBlocks( uint _communityRoundStartBlock, uint _crowdsaleStartBlock, uint _crowdsaleEndBlock) onlyOwner {
+  function setCrowdsaleDates( uint _communityRoundStartDate, uint _crowdsaleStartDate, uint _crowdsaleEndDate) onlyOwner {
     require(crowdsaleState == state.pendingStart);                // Check if crowdsale has started
-    require(_crowdsaleStartBlock != 0);                           // Check if any value is 0
-    require(_crowdsaleStartBlock < _crowdsaleEndBlock);           // Check if crowdsaleEndBlock is set properly
-    require(_crowdsaleEndBlock != 0);                             // Check if any value is 0
+    require(_communityRoundStartDate != 0);                       // Check if any value is 0
+    require(_crowdsaleStartDate != 0);                            // Check if any value is 0
+    require(_crowdsaleEndDate != 0);                              // Check if any value is 0
+    require(_communityRoundStartDate < _crowdsaleStartDate);      // Check if crowdsaleStartDate is set properly
+    require(_crowdsaleStartDate < _crowdsaleEndDate);             // Check if crowdsaleEndDate is set properly
 
-    communityRoundStartBlock = _communityRoundStartBlock;
-    crowdsaleStartBlock = _crowdsaleStartBlock;
-    crowdsaleEndBlock = _crowdsaleEndBlock;
+    communityRoundStartDate = _communityRoundStartDate;
+    crowdsaleStartDate = _crowdsaleStartDate;
+    crowdsaleEndDate = _crowdsaleEndDate;
   }
 }
