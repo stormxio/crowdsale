@@ -149,37 +149,33 @@ contract Crowdsale is ReentrancyHandling, Owned{
   function processTransaction(address _contributor, uint _amount) internal {
     uint contributionAmount = _amount;
     uint crowdsaleAmount = 0;
-    uint256 bonusAmount = 0;
+    uint bonusTokenAmount = 0;
 
     if (contributorList[_contributor].contributionAmount == 0) {                 // Check if contributor has already contributed
       contributorIndexes[nextContributorIndex] = _contributor;                   // Set contributors index
       nextContributorIndex++;
     }
     
-    contributorList[_contributor].contributionAmount += _amount;                // Add contribution amount to existing contributor
-    ethRaised += _amount;                                                       // Add to ETH raised
-
-    uint _amountContributed = contributorList[_contributor].contributionAmount;
+    uint _amountContributed = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
 
     // community round ONLY: check that _amount sent plus previous contributions is less than or equal to the maximum contribution allowed
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved == true && 
         maxContribution < _amount + _amountContributed) { 
-      contributionAmount = maxContribution - _amountContributed;               // limit the contribution amount to the maximum allowed
-      crowdsaleAmount = _amount - contributionAmount;                          // Calculate how much the participant must get back
+      contributionAmount = maxContribution - _amountContributed;                // limit the contribution amount to the maximum allowed
+      crowdsaleAmount = _amount - contributionAmount;                           // Calculate how much the participant must get back
 
-      bonusAmount = (contributionAmount * ethToTokenConversion) * 15 / 100;
+      bonusTokenAmount = (contributionAmount * ethToTokenConversion) * 15 / 100;
     }
       
-    // Calculate how many tokens participant receives 
-    uint256 tokenAmount = (_amount + bonusAmount) * ethToTokenConversion;
+    contributorList[_contributor].contributionAmount += _amount;                // Add contribution amount to existing contributor
+    ethRaised += _amount;                                                       // Add contribution amount to ETH raised
 
-    if (tokenAmount > 0) {
-      token.mintTokens(_contributor, tokenAmount);                              // Issue new tokens
-      contributorList[_contributor].tokensIssued += tokenAmount;                // log token issuance
+    uint tokenAmount = (_amount * ethToTokenConversion) + bonusTokenAmount;     // Calculate how many tokens participant receives
 
-      tokenSold += tokenAmount;                                                 // track how many tokens are sold
-    }
+    token.mintTokens(_contributor, tokenAmount);                              // Issue new tokens
+    contributorList[_contributor].tokensIssued += tokenAmount;                // log token issuance
+    tokenSold += tokenAmount;                                                 // track how many tokens are sold
   }
 
   //
