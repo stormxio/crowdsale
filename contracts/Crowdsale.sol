@@ -28,7 +28,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   event CrowdsaleStarted(uint timestamp);
   event CrowdsaleEnded(uint timestamp);
 
-  IToken token;
+  IToken token = IToken(0x0);
   uint ethToTokenConversion;
 
   uint maxCommunityRoundCap;
@@ -73,20 +73,20 @@ contract Crowdsale is ReentrancyHandling, Owned{
   // 
   // return crowdsale state
   //
-  function getCrowdsaleState() returns (string) {
-    var _state = "unknown";
+  function getCrowdsaleState() returns (uint) {
+    uint _state = 0;
 
     if (crowdsaleState == state.pendingStart) {
-      _state = "Pending";
+      _state = 1;
     }
     else if (crowdsaleState == state.communityRound) {
-      _state = "Community Round";
+      _state = 2;
     }
     else if (crowdsaleState == state.crowdsaleStarted) {
-      _state = "Crowdsale started";
+      _state = 3;
     }
     else if (crowdsaleState == state.crowdsaleEnded) {
-      _state = "Crowdsale ended";
+      _state = 4;
     }
     return _state;
   }
@@ -148,30 +148,31 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   function processTransaction(address _contributor, uint _amount) internal {
     uint contributionAmount = _amount;
-    uint returnAmount = 0;
+    uint crowdsaleAmount = 0;
+    uint256 bonusAmount = 0;
 
     if (contributorList[_contributor].contributionAmount == 0) {                 // Check if contributor has already contributed
       contributorIndexes[nextContributorIndex] = _contributor;                   // Set contributors index
       nextContributorIndex++;
     }
     
+    contributorList[_contributor].contributionAmount += _amount;                // Add contribution amount to existing contributor
+    ethRaised += _amount;                                                       // Add to ETH raised
+
     uint _amountContributed = contributorList[_contributor].contributionAmount;
 
     // community round ONLY: check that _amount sent plus previous contributions is less than or equal to the maximum contribution allowed
-    if (crowdsaleState == state.communityRound && contributorList[_contributor].isCommunityRoundApproved == true && maxContribution < _amount + _amountContributed) { 
+    if (crowdsaleState == state.communityRound && 
+        contributorList[_contributor].isCommunityRoundApproved == true && 
+        maxContribution < _amount + _amountContributed) { 
       contributionAmount = maxContribution - _amountContributed;               // limit the contribution amount to the maximum allowed
-      returnAmount = _amount - contributionAmount;                             // Calculate how much the participant must get back
+      crowdsaleAmount = _amount - contributionAmount;                          // Calculate how much the participant must get back
+
+      bonusAmount = (contributionAmount * ethToTokenConversion) * 15 / 100;
     }
       
-    contributorList[_contributor].contributionAmount += contributionAmount;     // Add contribution amount to existing contributor
-
-    ethRaised += contributionAmount;                                            // Add to eth raised
-
-    uint256 tokenAmount = contributionAmount * ethToTokenConversion;            // Calculate how much tokens must contributor get
-
-    if (crowdsaleState == state.communityRound) {                               
-      tokenAmount = tokenAmount * 15 / 100 + tokenAmount;                       // 15% discount for community round
-    }
+    // Calculate how many tokens participant receives 
+    uint256 tokenAmount = (_amount + bonusAmount) * ethToTokenConversion;
 
     if (tokenAmount > 0) {
       token.mintTokens(_contributor, tokenAmount);                              // Issue new tokens
@@ -179,7 +180,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
       tokenSold += tokenAmount;                                                 // track how many tokens are sold
     }
-    if (returnAmount != 0) _contributor.transfer(returnAmount);                 // Return overflow of ETH to sender
   }
 
   //
