@@ -6,7 +6,7 @@ import "./Utils/Owned.sol";
 import "./Utils/SafeMath.sol";
 import "./Utils/Lockable.sol";
 
-contract Token is IERC20Token, Owned, Lockable{
+contract Token is IERC20Token, Owned, Lockable {
 
   using SafeMath for uint256;
 

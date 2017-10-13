@@ -3,7 +3,7 @@ pragma solidity ^0.4.13;
 import "./Crowdsale.sol";
 
 contract StormCrowdsale is Crowdsale {
-  function StormCrowdsale() {
+  function StormCrowdsale() public {
     communityRoundStartDate = 1508504400;   // Oct 20, 2017 @ 6am PST
     crowdsaleStartDate = 1508590800;        // 24 hours later
     crowdsaleEndDate = 1511182800;          // Nov 20, 2017 @ 6am PST
@@ -19,7 +19,7 @@ contract StormCrowdsale is Crowdsale {
     maxContribution = 100;                  // maximum contribution during community round
 
     /******** WARNING DO NOT DEPLOY ********/
-    multisigAddress = 0x180cbd8a4e227d9a7ac9b91f75c3004cab187b6a;   // TODO: SET A VALID WALLET ADDRESS OWNED BY CAKECODES
-    token = IToken(multisigAddress);
+//    multisigAddress = 0x180cbd8a4e227d9a7ac9b91f75c3004cab187b6a;   // TODO: SET A VALID WALLET ADDRESS OWNED BY CAKECODES
+//    token = IToken(multisigAddress);
   }
 }
