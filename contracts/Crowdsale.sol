@@ -43,7 +43,8 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
   uint maxTokenSupply;
   uint companyTokens;
-  bool ownerHasClaimedTokens;
+  bool ownerHasClaimedTokens = false;
+  bool ownerHasClaimedCompanyTokens = false;
 
   //
   // Unnamed function that runs when eth is sent to the contract
@@ -242,8 +243,10 @@ contract Crowdsale is ReentrancyHandling, Owned{
   // Owner claims company tokens
   //
   function claimCompanyTokens(address _to) public onlyOwner {
-//    require(crowdsaleState == state.pendingStart);              // Check crowdsale hasn't started
+    require(!ownerHasClaimedCompanyTokens);                     // Check if owner has already claimed tokens
+
     token.mintTokens(_to, companyTokens);                       // Issue company tokens 
+    ownerHasClaimedCompanyTokens = true;                        // Block further mints from this method
   }
 
   //
