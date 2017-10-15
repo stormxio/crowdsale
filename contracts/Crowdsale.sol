@@ -47,6 +47,13 @@ contract Crowdsale is ReentrancyHandling, Owned{
   bool ownerHasClaimedTokens = false;
   bool ownerHasClaimedCompanyTokens = false;
 
+
+  // validates address is the crowdsale owner
+  modifier onlyCrowdsaleOwner() {
+      require(msg.sender == companyAddress);
+      _;
+  }
+
   //
   // Unnamed function that runs when eth is sent to the contract
   //
@@ -221,8 +228,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     pendingEthWithdrawal = this.balance;
   }
 
-  function pullBalance() public {
-    require(msg.sender == companyAddress);
+  function pullBalance() public onlyCrowdsaleOwner {
     require(pendingEthWithdrawal > 0);
 
     companyAddress.transfer(pendingEthWithdrawal);
@@ -259,8 +265,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Claims company tokens
   //
-  function claimCompanyTokens(address _to) public {
-    require(msg.sender == companyAddress);
+  function claimCompanyTokens(address _to) public onlyCrowdsaleOwner {
     require(!ownerHasClaimedCompanyTokens);                     // Check if owner has already claimed tokens
 
     token.mintTokens(_to, companyTokens);                       // Issue company tokens 
@@ -270,8 +275,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Claim remaining tokens when crowdsale ends
   //
-  function claimRemainingTokens(address _to) public {
-    require(msg.sender == companyAddress);
+  function claimRemainingTokens(address _to) public onlyCrowdsaleOwner {
     require(crowdsaleState == state.crowdsaleEnded);              // Check crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
 
@@ -284,7 +288,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //  Before crowdsale starts owner can calibrate blocks of crowdsale stages
   //
   function setCrowdsaleDates( uint _communityRoundStartDate, uint _crowdsaleStartDate, uint _crowdsaleEndDate) public onlyOwner {
-//    require(crowdsaleState == state.pendingStart);                // Check if crowdsale has started
     require(_communityRoundStartDate != 0);                       // Check if any value is 0
     require(_crowdsaleStartDate != 0);                            // Check if any value is 0
     require(_crowdsaleEndDate != 0);                              // Check if any value is 0

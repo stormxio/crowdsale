@@ -6,7 +6,7 @@ import "./Utils/Owned.sol";
 import "./Utils/SafeMath.sol";
 import "./Utils/Lockable.sol";
 
-contract Token is IERC20Token, Owned, Lockable {
+contract Token is IERC20Token, Owned {
 
   using SafeMath for uint256;
 
@@ -26,6 +26,12 @@ contract Token is IERC20Token, Owned, Lockable {
   /* Events */
   event Mint(address indexed _to, uint256 _value);
 
+  // validates address is the crowdsale owner
+  modifier onlyCrowdsaleOwner() {
+      require(msg.sender == crowdsaleContractAddress);
+      _;
+  }
+
   /* Returns total supply of issued tokens */
   function totalSupply() constant returns (uint256) {
     return supply;
@@ -37,7 +43,7 @@ contract Token is IERC20Token, Owned, Lockable {
   }
 
   /* Transfers tokens from your address to other */
-  function transfer(address _to, uint256 _value) lockAffected returns (bool success) {
+  function transfer(address _to, uint256 _value) returns (bool success) {
     require(_to != 0x0 && _to != address(this));
     balances[msg.sender] = balances[msg.sender].sub(_value); // Deduct senders balance
     balances[_to] = balances[_to].add(_value);               // Add recivers blaance
@@ -46,14 +52,14 @@ contract Token is IERC20Token, Owned, Lockable {
   }
 
   /* Approve other address to spend tokens on your account */
-  function approve(address _spender, uint256 _value) lockAffected returns (bool success) {
+  function approve(address _spender, uint256 _value) returns (bool success) {
     allowances[msg.sender][_spender] = _value;        // Set allowance
     Approval(msg.sender, _spender, _value);           // Raise Approval event
     return true;
   }
 
   /* Approve and then communicate the approved contract in a single tx */
-  function approveAndCall(address _spender, uint256 _value, bytes _extraData) lockAffected returns (bool success) {
+  function approveAndCall(address _spender, uint256 _value, bytes _extraData) returns (bool success) {
     ItokenRecipient spender = ItokenRecipient(_spender);            // Cast spender to tokenRecipient contract
     approve(_spender, _value);                                      // Set approval to contract for _value
     spender.receiveApproval(msg.sender, _value, this, _extraData);  // Raise method on _spender contract
@@ -61,7 +67,7 @@ contract Token is IERC20Token, Owned, Lockable {
   }
 
   /* A contract attempts to get the coins */
-  function transferFrom(address _from, address _to, uint256 _value) lockAffected returns (bool success) {
+  function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
     require(_to != 0x0 && _to != address(this));
     balances[_from] = balances[_from].sub(_value);                              // Deduct senders balance
     balances[_to] = balances[_to].add(_value);                                  // Add recipient blaance
@@ -74,16 +80,14 @@ contract Token is IERC20Token, Owned, Lockable {
     return allowances[_owner][_spender];
   }
 
-  function mintTokens(address _to, uint256 _amount) {
-    require(msg.sender == crowdsaleContractAddress);
-
+  function mintTokens(address _to, uint256 _amount) onlyCrowdsaleOwner {
     supply = supply.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     Mint(_to, _amount);
-    Transfer(0x0, _to, _amount);
+    Transfer(msg.sender, _to, _amount);
   }
 
-  function salvageTokensFromContract(address _tokenAddress, address _to, uint _amount) onlyOwner{
+  function salvageTokensFromContract(address _tokenAddress, address _to, uint _amount) onlyOwner {
     IERC20Token(_tokenAddress).transfer(_to, _amount);
   }
 }
