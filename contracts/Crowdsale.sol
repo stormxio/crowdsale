@@ -36,10 +36,10 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
   uint maxCrowdsaleCap;
 
-  uint public tokenSold = 0;          // DO NOT MAKE PUBLIC
-  uint public ethRaised;              // DO NOT MAKE PUBLIC
+  uint public tokenSold = 0;
+  uint public ethRaised = 0;
 
-  address internal multisigAddress;     
+  address internal companyAddress;   // StormX company wallet address in cold/hardware storage 
 
   uint maxTokenSupply;
   uint companyTokens;
@@ -53,7 +53,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     require(msg.value != 0);                        // Throw if value is 0
     require(crowdsaleState != state.crowdsaleEnded);// Check if crowdsale has ended
 
-    bool stateChanged = checkCrowdsaleState();      // Check blocks and calibrate crowdsale state
+    bool stateChanged = checkCrowdsaleState();      // Calibrate crowdsale state
 
     if (crowdsaleState == state.communityRound) {
       if (contributorList[msg.sender].isCommunityRoundApproved) {    // Check if contributor is approved for community round.
@@ -76,6 +76,8 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   function getCrowdsaleState() public constant returns (uint) {
     uint _state = 0;
+
+    checkCrowdsaleState();                          // Calibrate crowdsale state
 
     if (crowdsaleState == state.pendingStart) {
       _state = 1;
@@ -121,7 +123,8 @@ contract Crowdsale is ReentrancyHandling, Owned{
           _stateChanged = true;
         }
       }
-      else {  // automatically start crowdsale when all community round tokens are sold out
+      // automatically start crowdsale when all community round tokens are sold out 
+      else {  
         if (crowdsaleState != state.crowdsaleStarted) {
           crowdsaleState = state.crowdsaleStarted;
           CrowdsaleStarted(now);
@@ -209,10 +212,10 @@ contract Crowdsale is ReentrancyHandling, Owned{
   }
 
   function pullBalance() public {
-    require(msg.sender == multisigAddress);
+    require(msg.sender == companyAddress);
     require(pendingEthWithdrawal > 0);
 
-    multisigAddress.transfer(pendingEthWithdrawal);
+    companyAddress.transfer(pendingEthWithdrawal);
     pendingEthWithdrawal = 0;
   }
 
@@ -222,14 +225,14 @@ contract Crowdsale is ReentrancyHandling, Owned{
   function withdrawRemainingBalanceForManualRecovery() public onlyOwner {
     require(this.balance != 0);                                   // Check if there are any eth to claim
     require(now > crowdsaleEndDate);                              // Check if crowdsale is over
-    multisigAddress.transfer(this.balance);                       // Withdraw to multisig
+    companyAddress.transfer(this.balance);                       // Withdraw to multisig
   }
 
   //
   // Owner can set multisig address for crowdsale
   //
   function setMultisigAddress(address _newAddress) public onlyOwner {
-    multisigAddress = _newAddress;
+    companyAddress = _newAddress;
   }
 
   //
@@ -239,10 +242,15 @@ contract Crowdsale is ReentrancyHandling, Owned{
     token = IToken(_newAddress);
   }
 
+  function getToken() public constant returns (address) {
+    return address(token);
+  }
+
   //
-  // Owner claims company tokens
+  // Claims company tokens
   //
-  function claimCompanyTokens(address _to) public onlyOwner {
+  function claimCompanyTokens(address _to) public {
+    require(msg.sender == companyAddress);
     require(!ownerHasClaimedCompanyTokens);                     // Check if owner has already claimed tokens
 
     token.mintTokens(_to, companyTokens);                       // Issue company tokens 
@@ -250,19 +258,16 @@ contract Crowdsale is ReentrancyHandling, Owned{
   }
 
   //
-  // Owner can claim remaining tokens when crowdsale ends
+  // Claim remaining tokens when crowdsale ends
   //
-  function claimRemainingTokens(address _to) public onlyOwner {
+  function claimRemainingTokens(address _to) public {
+    require(msg.sender == companyAddress);
     require(crowdsaleState == state.crowdsaleEnded);              // Check crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
 
     uint remainingTokens = maxTokenSupply - token.totalSupply();
     token.mintTokens(_to, remainingTokens);                       // Issue tokens to company
     ownerHasClaimedTokens = true;                                 // Block further mints from this method
-  }
-
-  function getTokenAddress() public constant returns (address) {
-    return address(token);
   }
 
   //

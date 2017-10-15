@@ -17,9 +17,5 @@ contract StormCrowdsale is Crowdsale {
     maxCommunityRoundCap = 945000000;       // without 15% bonus of 141,750,000
     maxCrowdsaleCap = 3114132901;           // tokens allocated to crowdsale 
     maxContribution = 100;                  // maximum contribution during community round
-
-    /******** WARNING DO NOT DEPLOY ********/
-//    multisigAddress = 0x180cbd8a4e227d9a7ac9b91f75c3004cab187b6a;   // TODO: SET A VALID WALLET ADDRESS OWNED BY CAKECODES
-//    token = IToken(multisigAddress);
   }
 }
