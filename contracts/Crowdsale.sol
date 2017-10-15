@@ -203,7 +203,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   }
 
   function getContributor(address _contributorAddress) public onlyOwner returns (ContributorData) {
-    require(_contributorAddresses != 0x0); // Check if input data is correct
+    require(_contributorAddress != 0x0); // Check if input data is correct
 
     return contributorList[_contributor];
   }
