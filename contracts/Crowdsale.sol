@@ -35,6 +35,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   uint maxContribution;
 
   uint maxCrowdsaleCap;
+  uint maxEthCap;
 
   uint public tokenSold = 0;
   uint public ethRaised = 0;
@@ -152,8 +153,13 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   function processTransaction(address _contributor, uint _amount) internal {
     uint contributionAmount = _amount;
-    uint crowdsaleAmount = 0;
+    uint refundAmount = 0;
     uint bonusTokenAmount = 0;
+
+    if (ethRaised + contributionAmount > maxEthCap) {                            // limit contribution to not go over the maximum cap of ETH to raise
+      contributionAmount = maxEthCap - ethRaised;
+      refundAmount = _amount - contributionAmount;
+    }
 
     if (contributorList[_contributor].contributionAmount == 0) {                 // Check if contributor has already contributed
       contributorIndexes[nextContributorIndex] = _contributor;                   // Set contributors index
@@ -162,24 +168,27 @@ contract Crowdsale is ReentrancyHandling, Owned{
     
     uint _amountContributed = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
 
+    contributorList[_contributor].contributionAmount += contributionAmount;      // Add contribution amount to existing contributor
+    ethRaised += contributionAmount;                                             // Add contribution amount to ETH raised
+
     // community round ONLY: check that _amount sent plus previous contributions is less than or equal to the maximum contribution allowed
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved == true && 
-        maxContribution < _amount + _amountContributed) { 
+        maxContribution < contributionAmount + _amountContributed) { 
       contributionAmount = maxContribution - _amountContributed;                // limit the contribution amount to the maximum allowed
-      crowdsaleAmount = _amount - contributionAmount;                           // Calculate how much the participant must get back
 
       bonusTokenAmount = (contributionAmount * ethToTokenConversion) * 15 / 100;
     }
       
-    contributorList[_contributor].contributionAmount += _amount;                // Add contribution amount to existing contributor
-    ethRaised += _amount;                                                       // Add contribution amount to ETH raised
-
-    uint tokenAmount = (_amount * ethToTokenConversion) + bonusTokenAmount;     // Calculate how many tokens participant receives
+    uint tokenAmount = (contributionAmount * ethToTokenConversion) + bonusTokenAmount;     // Calculate how many tokens participant receives
 
     token.mintTokens(_contributor, tokenAmount);                              // Issue new tokens
     contributorList[_contributor].tokensIssued += tokenAmount;                // log token issuance
     tokenSold += tokenAmount;                                                 // track how many tokens are sold
+
+    if (refundAmount > 0) {
+      _contributor.transfer(refundAmount);                                    // refund contributor amount behind the maximum ETH cap
+    }
   }
 
   //
@@ -192,6 +201,13 @@ contract Crowdsale is ReentrancyHandling, Owned{
       contributorList[_contributorAddresses[cnt]].isCommunityRoundApproved = _contributorCommunityRoundApproved[cnt];
     }
   }
+
+  function getContributor(address _contributorAddress) public onlyOwner returns (ContributorData) {
+    require(_contributorAddresses != 0x0); // Check if input data is correct
+
+    return contributorList[_contributor];
+  }
+
 
   //
   // Method is needed for recovering tokens accidentally sent to token address
@@ -231,7 +247,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Owner can set multisig address for crowdsale
   //
-  function setMultisigAddress(address _newAddress) public onlyOwner {
+  function setCompanyAddress(address _newAddress) public onlyOwner {
     companyAddress = _newAddress;
   }
 

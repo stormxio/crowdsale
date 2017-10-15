@@ -16,6 +16,8 @@ contract StormCrowdsale is Crowdsale {
 
     maxCommunityRoundCap = 945000000;       // without 15% bonus of 141,750,000
     maxCrowdsaleCap = 3114132901;           // tokens allocated to crowdsale 
+
+    maxEthCap = 206295;                     // maximum ETH to raise
     maxContribution = 100;                  // maximum contribution during community round
   }
 }
