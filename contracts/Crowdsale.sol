@@ -18,7 +18,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   mapping(uint => address) contributorIndexes;
 
   enum state { pendingStart, communityRound, crowdsaleStarted, crowdsaleEnded }
-  state crowdsaleState = state.pendingStart;
+  state public crowdsaleState = state.pendingStart;
 
   uint communityRoundStartDate;
   uint crowdsaleStartDate;
@@ -76,23 +76,23 @@ contract Crowdsale is ReentrancyHandling, Owned{
   // return crowdsale state
   //
   function getCrowdsaleState() public constant returns (uint) {
-    uint _state = 0;
+    uint currentState = 0;
 
     checkCrowdsaleState();                          // Calibrate crowdsale state
 
     if (crowdsaleState == state.pendingStart) {
-      _state = 1;
+      currentState = 1;
     }
     else if (crowdsaleState == state.communityRound) {
-      _state = 2;
+      currentState = 2;
     }
     else if (crowdsaleState == state.crowdsaleStarted) {
-      _state = 3;
+      currentState = 3;
     }
     else if (crowdsaleState == state.crowdsaleEnded) {
-      _state = 4;
+      currentState = 4;
     }
-    return _state;
+    return currentState;
   }
 
   //
@@ -153,6 +153,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   function processTransaction(address _contributor, uint _amount) internal {
     uint contributionAmount = _amount;
+    uint communityAmount = 0;
     uint refundAmount = 0;
     uint bonusTokenAmount = 0;
 
@@ -166,7 +167,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
       nextContributorIndex++;
     }
     
-    uint _amountContributed = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
+    uint amountContributed = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
 
     contributorList[_contributor].contributionAmount += contributionAmount;      // Add contribution amount to existing contributor
     ethRaised += contributionAmount;                                             // Add contribution amount to ETH raised
@@ -174,10 +175,10 @@ contract Crowdsale is ReentrancyHandling, Owned{
     // community round ONLY: check that _amount sent plus previous contributions is less than or equal to the maximum contribution allowed
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved == true && 
-        maxContribution < contributionAmount + _amountContributed) { 
-      contributionAmount = maxContribution - _amountContributed;                // limit the contribution amount to the maximum allowed
+        maxContribution < contributionAmount + amountContributed) { 
+      communityAmount = maxContribution - amountContributed;                    // limit the contribution amount to the maximum allowed
 
-      bonusTokenAmount = (contributionAmount * ethToTokenConversion) * 15 / 100;
+      bonusTokenAmount = (communityAmount * ethToTokenConversion) * 15 / 100;
     }
       
     uint tokenAmount = (contributionAmount * ethToTokenConversion) + bonusTokenAmount;     // Calculate how many tokens participant receives
@@ -201,13 +202,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
       contributorList[_contributorAddresses[cnt]].isCommunityRoundApproved = _contributorCommunityRoundApproved[cnt];
     }
   }
-
-  function getContributor(address _contributorAddress) public onlyOwner returns (ContributorData) {
-    require(_contributorAddress != 0x0); // Check if input data is correct
-
-    return contributorList[_contributorAddress];
-  }
-
 
   //
   // Method is needed for recovering tokens accidentally sent to token address
