@@ -38,7 +38,7 @@ contract TestStormCrowdsale {
     uint expected_crowdsaleEndDate = 15111182800;
 
     uint expected_ethToTokenConversion = 26950;
-    uint expected 
+    uint expected_maxTokenSupply = 10000000000; 
   }
 
 /*
