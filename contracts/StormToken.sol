@@ -19,7 +19,7 @@ contract StormToken is Token {
     symbol = "STORM"; // token symbol
     decimals = 18;
     crowdsaleContractAddress = _crowdsaleAddress;
-    lockFromSelf(_startTime, "Lock before crowdsale starts");
+    // lockFromSelf(_startTime, "Lock before crowdsale starts");
   }
 
     // validates an address - currently only checks that it isn't null
