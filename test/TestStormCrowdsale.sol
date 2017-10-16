@@ -22,6 +22,25 @@ contract TestStormCrowdsale {
     Assert.equal(stormSale.tokenSold(), expected, "check tokens sold at contract deployment");
   }
 
+  function testCrowdsaleStateStart() {
+    StormCrowdsale stormSale = new StormCrowdsale();
+
+    uint expected = 1;
+
+    Assert.equal(stormSale.getCrowdsaleState(), expected, "check crowdsale state");
+  }
+
+  function testDefaultVariables() {
+    StormCrowdsale stormSale = new StormCrowdsale();
+
+    uint expected_communityRoundStartDate = 1508504400;
+    uint expected_crowdsaleStartDate = 1508590800;
+    uint expected_crowdsaleEndDate = 15111182800;
+
+    uint expected_ethToTokenConversion = 26950;
+    uint expected 
+  }
+
 /*
   function testMaxTokenSupply() {
     StormCrowdsale stormSale = new StormCrowdsale();
