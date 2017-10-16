@@ -49,15 +49,21 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
 
   // validates address is the crowdsale owner
-  modifier onlyCrowdsaleOwner() {
+  modifier onlyCrowdsaleOwner {
       require(msg.sender == companyAddress);
       _;
+  }
+
+  // limit gas price to 50 Gwei (about 5-10x the normal amount)
+  modifier onlyLowGasPrice {
+	  require(tx.gasprice <= 50*10**9);
+	  _;
   }
 
   //
   // Unnamed function that runs when eth is sent to the contract
   //
-  function() public noReentrancy payable {
+  function() public noReentrancy onlyLowGasPrice payable {
     require(msg.value != 0);                        // Throw if value is 0
     require(crowdsaleState != state.crowdsaleEnded);// Check if crowdsale has ended
 
