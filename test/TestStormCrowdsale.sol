@@ -2,33 +2,31 @@ pragma solidity ^0.4.2;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
+import "../contracts/StormToken.sol";
 import "../contracts/StormCrowdsale.sol";
 
 contract TestStormCrowdsale {
 
-  function testOwnerAddress() {
-    StormCrowdsale stormSale = new StormCrowdsale();
-
-    address expected = 0x180cbd8a4e227d9a7ac9b91f75c3004cab187b6a;
-
-    Assert.equal(stormSale.multisigAddress(), expected, "check owner address");
-  }
-
-  function testTokenSold() {
-    StormCrowdsale stormSale = new StormCrowdsale();
-
-    uint expected = 0;
-
-    Assert.equal(stormSale.tokenSold(), expected, "check tokens sold at contract deployment");
-  }
-
 /*
-  function testMaxTokenSupply() {
-    StormCrowdsale stormSale = new StormCrowdsale();
+  function testInitialState() {
+    uint _expected = 0;
 
-    uint expected = 3224707682;
+    StormCrowdsale.deployed().then(function(instance) {
+      _crowdsale=instance;
+      console.log(StormToken.deployed().address);
+    });
 
-    Assert.equal(stormSale.maxTokenSupply(), expected, "check maximum token supply");
+    Assert.equal(_crowdsale.tokenSold(), _expected, "check tokens sold at contract deployment");
+    Assert.equal(stormSale.ethRaised(), _expected, "check ETH raised at contract deployment");
   }
   */
+
+  function testBuyingTokens() {
+    uint _expected = 1;
+    StormCrowdsale _crowdsale = StormCrowdsale(DeployedAddresses.StormCrowdsale());
+
+    _crowdsale.send(1);
+
+    Assert.equal(_crowdsale.ethRaised(), _expected, "check buying tokens");
+  }
 }
