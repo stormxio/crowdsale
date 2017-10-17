@@ -19,7 +19,7 @@ module.exports = function(deployer) {
   deployer.deploy(Owned);
   deployer.deploy(Lockable);
   deployer.deploy(Token);
-  deployer.deploy(StormToken, <companyAddress>, <start time>);
+  deployer.deploy(StormToken, <companyAddress>);
   deployer.deploy(Crowdsale);
   deployer.deploy(StormCrowdsale);
 };
