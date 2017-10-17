@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 
 build/contracts/Crowdsale.json
 
 *.json
+=======
+
+*.bin
+*.abi
+>>>>>>> master

@@ -291,7 +291,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   }
 
   //
-  //  Before crowdsale starts owner can calibrate blocks of crowdsale stages
+  //  Owner can calibrate crowdsale dates
   //
   function setCrowdsaleDates( uint _communityRoundStartDate, uint _crowdsaleStartDate, uint _crowdsaleEndDate) public onlyOwner {
     require(_communityRoundStartDate != 0);                       // Check if any value is 0
