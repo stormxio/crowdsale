@@ -6,26 +6,72 @@ contract('Check Transaction', function(accounts) {
 	let token;
 
 	beforeEach(async function() {
-		// crowdsale = await StormCrowdsale.deployed();
-		crowdsale = await StormCrowdsale.new();
+		crowdsale = await StormCrowdsale.deployed();
+		// crowdsale = await StormCrowdsale.new();
+		token = await StormToken.deployed();
 	});	
 
 	it('sending payment', async function() {
 		let account0 = web3.eth.accounts[0];
 		let account1 = web3.eth.accounts[1];
+		let account2 = web3.eth.accounts[2];
 		console.log('accounts[0]: ', account0);
 		console.log('accounts[1]: ', account1);
+		console.log('accounts[2]: ', account2);
+
 		crowdsale = await StormCrowdsale.new();
 		await crowdsale.setCompanyAddress(account0);
+
+		console.log('Setting White List Contributors');
+		let addresses = [account0, account1, account2];
+		let bools = [true, true, true];
+		console.log('addresses length: ', addresses.length);
+		console.log('bools length: ', bools.length);
+
+		let add = await crowdsale.WhiteListContributors(addresses, bools);
+		console.log('event add: ', add);
+
+		let contributorData = await crowdsale.isCommunityRoundApproved(account0);
+		console.log('result of get contributor: ');
+		console.log(`contributor: ${account0} , ${contributorData.toString()}`);
+
+		console.log('Grab Contributor List from contract');
+		let contributorList = await crowdsale.contributorList(account0);
+		console.log('Got Contributor List!');
+
+		let keys = Object.keys(contributorList);
+		console.log('Contributor List Keys: ', keys.toString());
+
 		console.log('crowdsale address: ', crowdsale.address);
-		console.log('crowdsale contract: ', crowdsale);
-		token = StormToken.at(crowdsale.address);
-		// console.log('token: ', token);
+		// console.log('crowdsale contract: ', crowdsale);
+
+		crowdsale.claimCompanyTokens(account0);
+		const accountBalance_company = web3.eth.getBalance(web3.eth.accounts[0]);
+		const accountBalance_company_number = new web3.BigNumber(accountBalance_company);
+		console.log('balance of company eth: ', accountBalance_company_number.toString());
+
+		// token = await StormToken.at(crowdsale.address);
+		console.log('1');
+		const balance = await token.balanceOf(account0);
+		console.log('2');
+		const balance_number = new web3.BigNumber(balance);
+		console.log('3');
+		console.log('balance of company token: ', balance_number.toString());
+
+		// Time skip
+		const crowdsalesStartDate = 1508280057;  
+		await crowdsale.setCrowdsaleDates(1508280056, 1508280057, 1508280057+900000000);
+		const currState = await crowdsale.getCrowdsaleState();
+		const currState_number = new web3.BigNumber(currState);
+		console.log('current state: ', currState.toString());
+
 		const value = web3.toWei(0.01, "ether");
 		console.log('value: ', value);
+
 		const accountBalance = web3.eth.getBalance(web3.eth.accounts[1]);
 		const accountBalance_number = new web3.BigNumber(accountBalance);
 		console.log('balance of account1: ', accountBalance_number.toString());
+
 		crowdsale.sendTransaction({
 			from: account1, 
 			to: crowdsale.address, 

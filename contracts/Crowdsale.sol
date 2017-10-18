@@ -14,8 +14,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
   }
 
   mapping(address => ContributorData) public contributorList;
-  uint nextContributorIndex;
-  mapping(uint => address) contributorIndexes;
 
   enum state { pendingStart, communityRound, crowdsaleStarted, crowdsaleEnded }
   state public crowdsaleState = state.pendingStart;
@@ -165,6 +163,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   // Issue tokens and return if there is overflow
   //
   function processTransaction(address _contributor, uint _amount) internal {
+
     uint contributionAmount = _amount;
     uint communityAmount = 0;
     uint refundAmount = 0;
@@ -173,11 +172,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
     if (ethRaised + contributionAmount > maxEthCap) {                            // limit contribution to not go over the maximum cap of ETH to raise
       contributionAmount = maxEthCap - ethRaised;
       refundAmount = _amount - contributionAmount;
-    }
-
-    if (contributorList[_contributor].contributionAmount == 0) {                 // Check if contributor has already contributed
-      contributorIndexes[nextContributorIndex] = _contributor;                   // Set contributors index
-      nextContributorIndex++;
     }
     
     uint amountContributed = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
@@ -203,6 +197,9 @@ contract Crowdsale is ReentrancyHandling, Owned{
     if (refundAmount > 0) {
       _contributor.transfer(refundAmount);                                    // refund contributor amount behind the maximum ETH cap
     }
+
+    require(companyAddress != 0x0);
+    companyAddress.transfer(contributionAmount);                              // throws if fails
   }
 
   //
@@ -216,6 +213,10 @@ contract Crowdsale is ReentrancyHandling, Owned{
     }
   }
 
+  function isCommunityRoundApproved(address _address) public returns (bool) {
+    return contributorList[_address].isCommunityRoundApproved == true;
+  }
+
   //
   // Method is needed for recovering tokens accidentally sent to token address
   //
@@ -223,23 +224,23 @@ contract Crowdsale is ReentrancyHandling, Owned{
     IERC20Token(_tokenAddress).transfer(_to, _amount);
   }
 
-  uint pendingEthWithdrawal;
+  // uint pendingEthWithdrawal;
   
-  //
-  // withdraw ETH by owner
-  //
-  function withdrawEth() public onlyOwner{
-    require(this.balance != 0);
+  // //
+  // // withdraw ETH by owner
+  // //
+  // function withdrawEth() public onlyOwner{
+  //   require(this.balance != 0);
 
-    pendingEthWithdrawal = this.balance;
-  }
+  //   pendingEthWithdrawal = this.balance;
+  // }
 
-  function pullBalance() public onlyCrowdsaleOwner {
-    require(pendingEthWithdrawal > 0);
+  // function pullBalance() public onlyCrowdsaleOwner {
+  //   require(pendingEthWithdrawal > 0);
 
-    companyAddress.transfer(pendingEthWithdrawal);
-    pendingEthWithdrawal = 0;
-  }
+  //   companyAddress.transfer(pendingEthWithdrawal);
+  //   pendingEthWithdrawal = 0;
+  // }
 
   //
   // If there were any issue/attach with refund owner can withraw eth at the end for manual recovery
@@ -252,6 +253,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
   //
   // Owner can set multisig address for crowdsale
+  // TODO: ONLY ALLOW ONCE COMPANY MULTISIG WALLET ADDRESS
   //
   function setCompanyAddress(address _newAddress) public onlyOwner {
     companyAddress = _newAddress;
@@ -259,6 +261,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
   //
   // Owner can set token address where mints will happen
+  // TODO: ONLY ALLOW ONCE (FOR THE STORM TOKEN CONTRACT)
   //
   function setToken(address _newAddress) public onlyOwner {
     token = IToken(_newAddress);
