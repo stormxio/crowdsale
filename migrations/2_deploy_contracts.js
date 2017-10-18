@@ -7,12 +7,11 @@ module.exports = function(deployer) {
   //   console.log('StormCrowdsale contract address: ', StormCrowdsale.address);
   //   deployer.deploy(StormToken, StormCrowdsale.address);
   // });
-  console.log('>>>deploying storm crowdsale')
   deployer.deploy(StormCrowdsale).then(function() {
-    console.log('>>>deployed storm crowdsale');
-    console.log('>>>deploying storm token');
-    deployer.deploy(StormToken, StormCrowdsale.address).then(function() {
-      console.log('>>>deployed storm token'); 
-    });
+    console.log('crowdsale address: ', StormCrowdsale.address);
+    // deployer.deploy(StormToken, StormCrowdsale.address).then(function() {
+    // deployer.deploy(StormToken, ).then(function() {
+    //   console.log('token address: ', StormToken.address);
+    // });
   });
 };
