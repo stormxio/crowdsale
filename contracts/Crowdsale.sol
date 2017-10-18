@@ -11,6 +11,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   using SafeMath for uint256;
   
   struct ContributorData{
+    bool isWhiteListed;
     bool isCommunityRoundApproved;
     uint contributionAmount;
     uint tokensIssued;
@@ -51,8 +52,14 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
   // validates address is the crowdsale owner
   modifier onlyCrowdsaleOwner {
-      require(msg.sender == companyAddress);
-      _;
+    require(msg.sender == companyAddress);
+    _;
+  }
+
+  // validates sender is whitelisted
+  modifier onlyWhiteListUser {
+    require(contributorList[msg.sender].isWhiteListed == true);
+    _;
   }
 
   // limit gas price to 50 Gwei (about 5-10x the normal amount)
@@ -64,25 +71,25 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Unnamed function that runs when eth is sent to the contract
   //
-  function() public noReentrancy onlyLowGasPrice payable {
-    require(msg.value != 0);                        // Throw if value is 0
-    require(crowdsaleState != state.crowdsaleEnded);// Check if crowdsale has ended
+  function() public noReentrancy onlyWhiteListUser onlyLowGasPrice payable {
+    require(msg.value != 0);                                         // Throw if value is 0
+    require(crowdsaleState != state.crowdsaleEnded);                 // Check if crowdsale has ended
 
-    bool stateChanged = checkCrowdsaleState();      // Calibrate crowdsale state
+    bool stateChanged = checkCrowdsaleState();                       // Calibrate crowdsale state
 
     if (crowdsaleState == state.communityRound) {
       if (contributorList[msg.sender].isCommunityRoundApproved) {    // Check if contributor is approved for community round.
-        processTransaction(msg.sender, msg.value);  // Process transaction and issue tokens
+        processTransaction(msg.sender, msg.value);                   // Process transaction and issue tokens
       }
       else {
-        refundTransaction(stateChanged);            // Set state and return funds or throw
+        refundTransaction();                                         // Set state and return funds or throw
       }
     }
     else if(crowdsaleState == state.crowdsaleStarted){
-      processTransaction(msg.sender, msg.value);    // Process transaction and issue tokens
+      processTransaction(msg.sender, msg.value);                     // Process transaction and issue tokens
     }
     else{
-      refundTransaction(stateChanged);              // Set state and return funds or throw
+      refundTransaction();                                           // Set state and return funds or throw
     }
   }
 
@@ -116,7 +123,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     bool _stateChanged = false;
 
     // end crowdsale once all tokens are sold or run out of time
-    if (now > crowdsaleEndDate || tokenSold >= maxCrowdsaleCap) {
+    if (now > crowdsaleEndDate || tokenSold >= maxCrowdsaleCap || ethRaised >= maxEthCap) {
       if (crowdsaleState != state.crowdsaleEnded) {
         crowdsaleState = state.crowdsaleEnded;
         CrowdsaleEnded(now);
@@ -154,12 +161,8 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Decide if throw or only return ether
   //
-  function refundTransaction(bool _stateChanged) internal {
-    if (_stateChanged){
-      msg.sender.transfer(msg.value);
-    }else{
-      revert();
-    }
+  function refundTransaction() internal {
+    msg.sender.transfer(msg.value);
   }
 
   //
@@ -231,6 +234,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     require(_contributorAddresses.length == _contributorCommunityRoundApproved.length); // Check if input data is correct
 
     for (uint cnt = 0; cnt < _contributorAddresses.length; cnt++) {
+      contributorList[_contributorAddresses[cnt]].isWhiteListed = true;
       contributorList[_contributorAddresses[cnt]].isCommunityRoundApproved = _contributorCommunityRoundApproved[cnt];
     }
   }
