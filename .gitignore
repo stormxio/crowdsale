@@ -7,4 +7,9 @@ build/contracts/Crowdsale.json
 
 *.bin
 *.abi
+<<<<<<< HEAD
+>>>>>>> master
+=======
+
+*.json
 >>>>>>> master
