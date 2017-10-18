@@ -42,10 +42,11 @@ contract Crowdsale is ReentrancyHandling, Owned{
   uint256 public tokenSold = 0;
   uint256 public ethRaised = 0;
 
-  address internal companyAddress;   // StormX company wallet address in cold/hardware storage 
+  address public companyAddress;   // company wallet address in cold/hardware storage 
 
   uint maxTokenSupply;
   uint companyTokens;
+  bool treasuryLocked = false;
   bool ownerHasClaimedTokens = false;
   bool ownerHasClaimedCompanyTokens = false;
 
@@ -169,45 +170,40 @@ contract Crowdsale is ReentrancyHandling, Owned{
   // Issue tokens and return if there is overflow
   //
   function processTransaction(address _contributor, uint256 _amount) internal {
-    uint256 contributionAmount = _amount;
+    uint256 newContribution = _amount;
     uint256 communityAmount = 0;
     uint256 refundAmount = 0;
     uint256 bonusTokenAmount = 0;
 
-//    if (ethRaised + contributionAmount > maxEthCap) {                            // limit contribution to not go over the maximum cap of ETH to raise
-    if (ethRaised.add(contributionAmount) > maxEthCap) {                            // limit contribution to not go over the maximum cap of ETH to raise
-//      contributionAmount = maxEthCap - ethRaised;
-      contributionAmount = maxEthCap.sub(ethRaised);
+    if (ethRaised.add(newContribution) > maxEthCap) {                            // limit contribution to not go over the maximum cap of ETH to raise
+      newContribution = maxEthCap.sub(ethRaised);
 
-//      refundAmount = _amount - contributionAmount;
-      refundAmount = _amount.sub(contributionAmount);
+      refundAmount = _amount.sub(newContribution);
     }
 
-    uint amountContributed = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
+    uint previousContribution = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
 
     // Add contribution amount to existing contributor
-//    contributorList[_contributor].contributionAmount += contributionAmount;      
-    contributorList[_contributor].contributionAmount = contributorList[_contributor].contributionAmount.add(contributionAmount);
-//    ethRaised += contributionAmount;                                             // Add contribution amount to ETH raised
-    ethRaised = ethRaised.add(contributionAmount);                              // Add contribution amount to ETH raised
+    contributorList[_contributor].contributionAmount = contributorList[_contributor].contributionAmount.add(newContribution);
+    ethRaised = ethRaised.add(newContribution);                              // Add contribution amount to ETH raised
 
     // community round ONLY: check that _amount sent plus previous contributions is less than or equal to the maximum contribution allowed
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved == true && 
-//        maxContribution < contributionAmount + amountContributed) { 
-        maxContribution < contributionAmount.add(amountContributed)) { 
-//      communityAmount = maxContribution - amountContributed;                    // limit the contribution amount to the maximum allowed
-      communityAmount = maxContribution.sub(amountContributed);                 // limit the contribution amount to the maximum allowed
+        previousContribution < maxContribution) {
+        communityAmount = newContribution;
 
-//      bonusTokenAmount = (communityAmount * ethToTokenConversion) * 15 / 100;
-      bonusTokenAmount = communityAmount.mul(ethToTokenConversion);
-      bonusTokenAmount = bonusTokenAmount.mul(15);
-      bonusTokenAmount = bonusTokenAmount.div(100);
+        if (communityAmount.add(previousContribution) > maxContribution) {
+          communityAmount = maxContribution.sub(previousContribution);                 // limit the contribution amount to the maximum allowed
+        }
+
+        bonusTokenAmount = communityAmount.mul(ethToTokenConversion);
+        bonusTokenAmount = bonusTokenAmount.mul(15);
+        bonusTokenAmount = bonusTokenAmount.div(100);
     }
       
     // Calculate how many tokens participant receives
-//    uint tokenAmount = (contributionAmount * ethToTokenConversion) + bonusTokenAmount;     
-    uint tokenAmount = contributionAmount.mul(ethToTokenConversion);
+    uint tokenAmount = newContribution.mul(ethToTokenConversion);
     tokenAmount = tokenAmount.add(bonusTokenAmount);
 
     token.mintTokens(_contributor, tokenAmount);                              // Issue new tokens
@@ -224,7 +220,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     }
 
     require(companyAddress != 0x0);
-    companyAddress.transfer(contributionAmount);                              // send ETH to company
+    companyAddress.transfer(newContribution);                              // send ETH to company
   }
 
   //
@@ -259,7 +255,9 @@ contract Crowdsale is ReentrancyHandling, Owned{
   // Owner can set multisig address for crowdsale
   //
   function setCompanyAddress(address _newAddress) public onlyOwner {
+    require(!treasuryLocked);                              // Check if owner has already claimed tokens
     companyAddress = _newAddress;
+    treasuryLocked = true;
   }
 
   //
