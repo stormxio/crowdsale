@@ -2,11 +2,14 @@ pragma solidity ^0.4.13;
 
 import "./Utils/ReentrancyHandling.sol";
 import "./Utils/Owned.sol";
+import "./Utils/SafeMath.sol";
 import "./Interfaces/IToken.sol";
 import "./Interfaces/IERC20Token.sol";
 
 contract Crowdsale is ReentrancyHandling, Owned{
 
+  using SafeMath for uint256;
+  
   struct ContributorData{
     bool isCommunityRoundApproved;
     uint contributionAmount;
@@ -14,8 +17,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
   }
 
   mapping(address => ContributorData) public contributorList;
-  uint nextContributorIndex;
-  mapping(uint => address) contributorIndexes;
 
   enum state { pendingStart, communityRound, crowdsaleStarted, crowdsaleEnded }
   state public crowdsaleState = state.pendingStart;
@@ -35,10 +36,10 @@ contract Crowdsale is ReentrancyHandling, Owned{
   uint maxContribution;
 
   uint maxCrowdsaleCap;
-  uint maxEthCap;
+  uint256 maxEthCap;
 
-  uint public tokenSold = 0;
-  uint public ethRaised = 0;
+  uint256 public tokenSold = 0;
+  uint256 public ethRaised = 0;
 
   address internal companyAddress;   // StormX company wallet address in cold/hardware storage 
 
@@ -164,45 +165,63 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Issue tokens and return if there is overflow
   //
-  function processTransaction(address _contributor, uint _amount) internal {
-    uint contributionAmount = _amount;
-    uint communityAmount = 0;
-    uint refundAmount = 0;
-    uint bonusTokenAmount = 0;
+  function processTransaction(address _contributor, uint256 _amount) internal {
+    uint256 contributionAmount = _amount;
+    uint256 communityAmount = 0;
+    uint256 refundAmount = 0;
+    uint256 bonusTokenAmount = 0;
 
-    if (ethRaised + contributionAmount > maxEthCap) {                            // limit contribution to not go over the maximum cap of ETH to raise
-      contributionAmount = maxEthCap - ethRaised;
-      refundAmount = _amount - contributionAmount;
+//    if (ethRaised + contributionAmount > maxEthCap) {                            // limit contribution to not go over the maximum cap of ETH to raise
+    if (ethRaised.add(contributionAmount) > maxEthCap) {                            // limit contribution to not go over the maximum cap of ETH to raise
+//      contributionAmount = maxEthCap - ethRaised;
+      contributionAmount = maxEthCap.sub(ethRaised);
+
+//      refundAmount = _amount - contributionAmount;
+      refundAmount = _amount.sub(contributionAmount);
     }
 
-    if (contributorList[_contributor].contributionAmount == 0) {                 // Check if contributor has already contributed
-      contributorIndexes[nextContributorIndex] = _contributor;                   // Set contributors index
-      nextContributorIndex++;
-    }
-    
     uint amountContributed = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
 
-    contributorList[_contributor].contributionAmount += contributionAmount;      // Add contribution amount to existing contributor
-    ethRaised += contributionAmount;                                             // Add contribution amount to ETH raised
+    // Add contribution amount to existing contributor
+//    contributorList[_contributor].contributionAmount += contributionAmount;      
+    contributorList[_contributor].contributionAmount = contributorList[_contributor].contributionAmount.add(contributionAmount);
+//    ethRaised += contributionAmount;                                             // Add contribution amount to ETH raised
+    ethRaised = ethRaised.add(contributionAmount);                              // Add contribution amount to ETH raised
 
     // community round ONLY: check that _amount sent plus previous contributions is less than or equal to the maximum contribution allowed
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved == true && 
-        maxContribution < contributionAmount + amountContributed) { 
-      communityAmount = maxContribution - amountContributed;                    // limit the contribution amount to the maximum allowed
+//        maxContribution < contributionAmount + amountContributed) { 
+        maxContribution < contributionAmount.add(amountContributed)) { 
+//      communityAmount = maxContribution - amountContributed;                    // limit the contribution amount to the maximum allowed
+      communityAmount = maxContribution.sub(amountContributed);                 // limit the contribution amount to the maximum allowed
 
-      bonusTokenAmount = (communityAmount * ethToTokenConversion) * 15 / 100;
+//      bonusTokenAmount = (communityAmount * ethToTokenConversion) * 15 / 100;
+      bonusTokenAmount = communityAmount.mul(ethToTokenConversion);
+      bonusTokenAmount = bonusTokenAmount.mul(15);
+      bonusTokenAmount = bonusTokenAmount.div(100);
     }
       
-    uint tokenAmount = (contributionAmount * ethToTokenConversion) + bonusTokenAmount;     // Calculate how many tokens participant receives
+    // Calculate how many tokens participant receives
+//    uint tokenAmount = (contributionAmount * ethToTokenConversion) + bonusTokenAmount;     
+    uint tokenAmount = contributionAmount.mul(ethToTokenConversion);
+    tokenAmount = tokenAmount.add(bonusTokenAmount);
 
     token.mintTokens(_contributor, tokenAmount);                              // Issue new tokens
-    contributorList[_contributor].tokensIssued += tokenAmount;                // log token issuance
-    tokenSold += tokenAmount;                                                 // track how many tokens are sold
+
+    // log token issuance
+//    contributorList[_contributor].tokensIssued += tokenAmount;                // log token issuance
+    contributorList[_contributor].tokensIssued = contributorList[_contributor].tokensIssued.add(tokenAmount);                
+
+//    tokenSold += tokenAmount;                                                 // track how many tokens are sold
+    tokenSold = tokenSold.add(tokenAmount);                                   // track how many tokens are sold
 
     if (refundAmount > 0) {
       _contributor.transfer(refundAmount);                                    // refund contributor amount behind the maximum ETH cap
     }
+
+    require(companyAddress != 0x0);
+    companyAddress.transfer(contributionAmount);                              // send ETH to company
   }
 
   //
@@ -223,31 +242,13 @@ contract Crowdsale is ReentrancyHandling, Owned{
     IERC20Token(_tokenAddress).transfer(_to, _amount);
   }
 
-  uint pendingEthWithdrawal;
-  
-  //
-  // withdraw ETH by owner
-  //
-  function withdrawEth() public onlyOwner{
-    require(this.balance != 0);
-
-    pendingEthWithdrawal = this.balance;
-  }
-
-  function pullBalance() public onlyCrowdsaleOwner {
-    require(pendingEthWithdrawal > 0);
-
-    companyAddress.transfer(pendingEthWithdrawal);
-    pendingEthWithdrawal = 0;
-  }
-
   //
   // If there were any issue/attach with refund owner can withraw eth at the end for manual recovery
   //
   function withdrawRemainingBalanceForManualRecovery() public onlyOwner {
     require(this.balance != 0);                                   // Check if there are any eth to claim
     require(now > crowdsaleEndDate);                              // Check if crowdsale is over
-    companyAddress.transfer(this.balance);                       // Withdraw to multisig
+    companyAddress.transfer(this.balance);                        // Withdraw to company address 
   }
 
   //
@@ -285,7 +286,9 @@ contract Crowdsale is ReentrancyHandling, Owned{
     require(crowdsaleState == state.crowdsaleEnded);              // Check crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
 
-    uint remainingTokens = maxTokenSupply - token.totalSupply();
+//    uint remainingTokens = maxTokenSupply - token.totalSupply();
+    uint256 remainingTokens = maxTokenSupply.sub(token.totalSupply());
+
     token.mintTokens(_to, remainingTokens);                       // Issue tokens to company
     ownerHasClaimedTokens = true;                                 // Block further mints from this method
   }
