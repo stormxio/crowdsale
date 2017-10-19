@@ -14,7 +14,6 @@ contract StormCrowdsale is Crowdsale {
 
     maxTokenSupply = 10000000000;           // 10,000,000,000
     companyTokens = 5799117100;             // allocation to company, private presale and users (marketing)
-    maxTokenSupply -= companyTokens;        // reduce token supply after company allocation
 
     maxCommunityRoundCap = 945000000;       // without 15% bonus of 141,750,000
     maxCrowdsaleCap = 3114132900;           // tokens allocated to crowdsale 
