@@ -209,10 +209,8 @@ contract Crowdsale is ReentrancyHandling, Owned{
     token.mintTokens(_contributor, tokenAmount);                              // Issue new tokens
 
     // log token issuance
-//    contributorList[_contributor].tokensIssued += tokenAmount;                // log token issuance
     contributorList[_contributor].tokensIssued = contributorList[_contributor].tokensIssued.add(tokenAmount);                
 
-//    tokenSold += tokenAmount;                                                 // track how many tokens are sold
     tokenSold = tokenSold.add(tokenAmount);                                   // track how many tokens are sold
 
     if (refundAmount > 0) {
@@ -308,5 +306,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
     communityRoundStartDate = _communityRoundStartDate;
     crowdsaleStartDate = _crowdsaleStartDate;
     crowdsaleEndDate = _crowdsaleEndDate;
+    checkCrowdsaleState();                                        // update state
   }
 }
