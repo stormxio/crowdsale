@@ -194,6 +194,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
         // compute community tokens without bonus
         communityTokenAmount = communityAmount.mul(ethToTokenConversion);
+        
         // compute bonus tokens
         bonusTokenAmount = communityTokenAmount.mul(15);
         bonusTokenAmount = bonusTokenAmount.div(100);
@@ -205,8 +206,13 @@ contract Crowdsale is ReentrancyHandling, Owned{
         if (communityTokenSold.add(communityTokenAmount) > maxCommunityCap) {
           // cap the tokens to the max allowed for the community round
           communityTokenAmount = maxCommunityCap.sub(communityTokenSold);
+
+          // remove bonus tokens
+          uint256 communityTokenWithoutBonus = communityTokenAmount.mul(100);
+          communityTokenWithoutBonus = communityTokenWithoutBonus.div(115);
+
           // recalculate the corresponding ETH amount
-          communityAmount = communityTokenAmount.div(ethToTokenConversion);
+          communityAmount = communityTokenWithoutBonus.div(ethToTokenConversion);
         }
         // track tokens sold during community round
         communityTokenSold.add(communityTokenAmount);
