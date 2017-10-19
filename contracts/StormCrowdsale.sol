@@ -7,7 +7,6 @@ contract StormCrowdsale is Crowdsale {
     communityRoundStartDate = 1508504400;   // Oct 20, 2017 @ 6am PST
     crowdsaleStartDate = 1508590800;        // 24 hours later
     crowdsaleEndDate = 1511182800;          // Nov 20, 2017 @ 6am PST
-    communityRoundStartDate = 1508393096;
 
     crowdsaleState = state.pendingStart;
 
