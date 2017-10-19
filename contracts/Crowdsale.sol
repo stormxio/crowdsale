@@ -83,14 +83,14 @@ contract Crowdsale is ReentrancyHandling, Owned{
         processTransaction(msg.sender, msg.value);                   // Process transaction and issue tokens
       }
       else {
-        refundTransaction();                                         // Set state and return funds or throw
+        refundTransaction(stateChanged);                             // Set state and return funds or throw
       }
     }
     else if(crowdsaleState == state.crowdsaleStarted){
       processTransaction(msg.sender, msg.value);                     // Process transaction and issue tokens
     }
     else{
-      refundTransaction();                                           // Set state and return funds or throw
+      refundTransaction(stateChanged);                               // Set state and return funds or throw
     }
   }
 
@@ -162,8 +162,13 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Decide if throw or only return ether
   //
-  function refundTransaction() internal {
-    msg.sender.transfer(msg.value);
+  function refundTransaction(bool _stateChanged) internal {
+    if (_stateChanged) {
+      msg.sender.transfer(msg.value);
+    }
+    else {
+      revert();
+    }
   }
 
   //
