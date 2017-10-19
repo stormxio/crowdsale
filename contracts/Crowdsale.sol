@@ -274,7 +274,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   function claimCompanyTokens(address _to) public onlyOwner {
     require(!ownerHasClaimedCompanyTokens);                     // Check if owner has already claimed tokens
-    require(_to == companyAddress)
+    require(_to == companyAddress);
 
     token.mintTokens(_to, companyTokens);                       // Issue company tokens 
     ownerHasClaimedCompanyTokens = true;                        // Block further mints from this method
@@ -286,7 +286,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   function claimRemainingTokens(address _to) public onlyOwner {
     require(crowdsaleState == state.crowdsaleEnded);              // Check crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
-    require(_to == companyAddress)
+    require(_to == companyAddress);
 
     uint256 remainingTokens = maxTokenSupply.sub(token.totalSupply());
 
