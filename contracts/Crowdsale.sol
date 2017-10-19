@@ -287,8 +287,8 @@ contract Crowdsale is ReentrancyHandling, Owned{
     require(crowdsaleState == state.crowdsaleEnded);              // Check crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
     require(_to == companyAddress);
-
-    uint256 remainingTokens = maxTokenSupply.sub(token.totalSupply());
+    uint256 initialMaxTokenSupply = 10000000000;                      // 10,000,000,000
+    uint256 remainingTokens = initialMaxTokenSupply.sub(token.totalSupply());
 
     token.mintTokens(_to, remainingTokens);                       // Issue tokens to company
     ownerHasClaimedTokens = true;                                 // Block further mints from this method
