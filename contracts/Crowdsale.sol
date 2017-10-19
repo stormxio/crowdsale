@@ -20,7 +20,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   mapping(address => ContributorData) public contributorList;
 
   enum state { pendingStart, communityRound, crowdsaleStarted, crowdsaleEnded }
-  state public crowdsaleState = state.pendingStart;
+  state public crowdsaleState;
 
   uint communityRoundStartDate;
   uint crowdsaleStartDate;
@@ -36,7 +36,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
   uint maxCommunityRoundCap;
   uint maxContribution;
 
-  uint maxCrowdsaleCap;
+  uint256 maxCrowdsaleCap;
   uint256 maxEthCap;
 
   uint256 public tokenSold = 0;
@@ -50,12 +50,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
   bool ownerHasClaimedTokens = false;
   bool ownerHasClaimedCompanyTokens = false;
 
-
-  // validates address is the crowdsale owner
-  modifier onlyCrowdsaleOwner {
-    require(msg.sender == companyAddress);
-    _;
-  }
 
   // validates sender is whitelisted
   modifier onlyWhiteListUser {
@@ -190,6 +184,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
 
     // Add contribution amount to existing contributor
     contributorList[_contributor].contributionAmount = contributorList[_contributor].contributionAmount.add(newContribution);
+
     ethRaised = ethRaised.add(newContribution);                              // Add contribution amount to ETH raised
 
     // community round ONLY: check that _amount sent plus previous contributions is less than or equal to the maximum contribution allowed
@@ -277,8 +272,9 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Claims company tokens
   //
-  function claimCompanyTokens(address _to) public onlyCrowdsaleOwner {
+  function claimCompanyTokens(address _to) public onlyOwner {
     require(!ownerHasClaimedCompanyTokens);                     // Check if owner has already claimed tokens
+    require(_to == companyAddress)
 
     token.mintTokens(_to, companyTokens);                       // Issue company tokens 
     ownerHasClaimedCompanyTokens = true;                        // Block further mints from this method
@@ -287,11 +283,11 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Claim remaining tokens when crowdsale ends
   //
-  function claimRemainingTokens(address _to) public onlyCrowdsaleOwner {
+  function claimRemainingTokens(address _to) public onlyOwner {
     require(crowdsaleState == state.crowdsaleEnded);              // Check crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
+    require(_to == companyAddress)
 
-//    uint remainingTokens = maxTokenSupply - token.totalSupply();
     uint256 remainingTokens = maxTokenSupply.sub(token.totalSupply());
 
     token.mintTokens(_to, remainingTokens);                       // Issue tokens to company
