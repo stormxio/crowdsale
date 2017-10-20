@@ -216,7 +216,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
           communityEthAmount = communityTokenWithoutBonus.div(ethToTokenConversion);
         }
         // track tokens sold during community round
-        communityTokenSold.add(communityTokenAmount);
+        communityTokenSold = communityTokenSold.add(communityTokenAmount);
     }
       
     // compute ETH amount for crowdsale portion only
@@ -233,7 +233,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
       crowdsaleEthAmount = crowdsaleTokenAmount.div(ethToTokenConversion);
     }
     // track tokens sold during crowdsale round
-    crowdsaleTokenSold.add(crowdsaleTokenAmount);
+    crowdsaleTokenSold = crowdsaleTokenSold.add(crowdsaleTokenAmount);
 
     // add up crowdsale tokens + community tokens
     uint256 tokenAmount = crowdsaleTokenAmount.add(communityTokenAmount);
