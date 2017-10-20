@@ -175,7 +175,8 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   function processTransaction(address _contributor, uint256 _amount) internal {
     uint256 newContribution = _amount;
-    uint256 communityAmount = 0;
+    uint256 crowdsaleEthAmount = 0;
+    uint256 communityEthAmount = 0;
     uint256 communityTokenAmount = 0;
     uint256 bonusTokenAmount = 0;
 
@@ -185,16 +186,16 @@ contract Crowdsale is ReentrancyHandling, Owned{
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved == true && 
         previousContribution < maxContribution) {
-        communityAmount = newContribution;
+        communityEthAmount = newContribution;
 
         // limit the contribution ETH amount to the maximum allowed for the community round
-        if (communityAmount.add(previousContribution) > maxContribution) {
-          communityAmount = maxContribution.sub(previousContribution);                 
+        if (communityEthAmount.add(previousContribution) > maxContribution) {
+          communityEthAmount = maxContribution.sub(previousContribution);                 
         }
 
         // compute community tokens without bonus
-        communityTokenAmount = communityAmount.mul(ethToTokenConversion);
-        
+        communityTokenAmount = communityEthAmount.mul(ethToTokenConversion);
+
         // compute bonus tokens
         bonusTokenAmount = communityTokenAmount.mul(15);
         bonusTokenAmount = bonusTokenAmount.div(100);
@@ -212,24 +213,24 @@ contract Crowdsale is ReentrancyHandling, Owned{
           communityTokenWithoutBonus = communityTokenWithoutBonus.div(115);
 
           // recalculate the corresponding ETH amount
-          communityAmount = communityTokenWithoutBonus.div(ethToTokenConversion);
+          communityEthAmount = communityTokenWithoutBonus.div(ethToTokenConversion);
         }
         // track tokens sold during community round
         communityTokenSold.add(communityTokenAmount);
     }
       
     // compute ETH amount for crowdsale portion only
-    uint256 crowdsaleAmount = newContribution.sub(communityAmount);
+    crowdsaleEthAmount = newContribution.sub(communityEthAmount);
 
     // compute crowdsale tokens
-    uint256 crowdsaleTokenAmount = crowdsaleAmount.mul(ethToTokenConversion);
+    uint256 crowdsaleTokenAmount = crowdsaleEthAmount.mul(ethToTokenConversion);
 
     // verify crowdsale tokens do not go over the max cap for crowdsale round
     if (crowdsaleTokenSold.add(crowdsaleTokenAmount) > maxCrowdsaleCap) {
       // cap the tokens to the max allowed for the crowdsale round
       crowdsaleTokenAmount = maxCrowdsaleCap.sub(crowdsaleTokenSold);
       // recalculate the corresponding ETH amount
-      crowdsaleAmount = crowdsaleTokenAmount.div(ethToTokenConversion);
+      crowdsaleEthAmount = crowdsaleTokenAmount.div(ethToTokenConversion);
     }
     // track tokens sold during crowdsale round
     crowdsaleTokenSold.add(crowdsaleTokenAmount);
@@ -244,7 +245,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     contributorList[_contributor].tokensIssued = contributorList[_contributor].tokensIssued.add(tokenAmount);                
 
     // Add contribution amount to existing contributor
-    newContribution = crowdsaleAmount.add(communityAmount);
+    newContribution = crowdsaleEthAmount.add(communityEthAmount);
     contributorList[_contributor].contributionAmount = contributorList[_contributor].contributionAmount.add(newContribution);
 
     ethRaised = ethRaised.add(newContribution);                              // Add contribution amount to ETH raised
