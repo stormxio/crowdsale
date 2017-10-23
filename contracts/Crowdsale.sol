@@ -255,7 +255,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     uint256 refundAmount = _amount.sub(newContribution);
 
     if (refundAmount > 0) {
-      _contributor.transfer(refundAmount);                                    // refund contributor amount behind the maximum ETH cap
+      _contributor.transfer(refundAmount);                                   // refund contributor amount behind the maximum ETH cap
     }
 
     require(companyAddress != 0x0);
