@@ -130,7 +130,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
       if (crowdsaleState != state.crowdsaleStarted) {
         // apply any remaining tokens from community round to crowdsale round
         uint256 communityTokenRemaining = maxCommunityCap.sub(communityTokenSold);
-        maxCrowdsaleCap.add(communityTokenRemaining);
+        maxCrowdsaleCap = maxCrowdsaleCap.add(communityTokenRemaining);
         // change state
         crowdsaleState = state.crowdsaleStarted;
         CrowdsaleStarted(now);
