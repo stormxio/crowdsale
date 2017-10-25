@@ -143,7 +143,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
   //
   // Issue tokens and return if there is overflow
   //
-  function calculateCommunity(address _contributor, uint256 _newContribution) internal returns (uint256) {
+  function calculateCommunity(address _contributor, uint256 _newContribution) internal returns (uint256, uint256) {
     uint256 communityEthAmount = 0;
     uint256 communityTokenAmount = 0;
 
@@ -151,12 +151,12 @@ contract Crowdsale is ReentrancyHandling, Owned {
     // community round ONLY
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved == true && 
-        _previousContribution < maxContribution) {
+        previousContribution < maxContribution) {
         communityEthAmount = _newContribution;
 
         // limit the contribution ETH amount to the maximum allowed for the community round
-        if (communityEthAmount.add(_previousContribution) > maxContribution) {
-          communityEthAmount = maxContribution.sub(_previousContribution);                 
+        if (communityEthAmount.add(previousContribution) > maxContribution) {
+          communityEthAmount = maxContribution.sub(previousContribution);                 
         }
 
         // compute community tokens without bonus
@@ -215,12 +215,10 @@ contract Crowdsale is ReentrancyHandling, Owned {
   //
   function processTransaction(address _contributor, uint256 _amount) internal {
     uint256 newContribution = _amount;
-    uint256 crowdsaleEthAmount = 0;
-
-    uint256 (communityTokenAmount, communityEthAmount) = calculateCommunity(_contributor, newContribution);
+    var (communityTokenAmount, communityEthAmount) = calculateCommunity(_contributor, newContribution);
 
     // compute remaining ETH amount available for purchasing crowdsale tokens
-    uint256 (crowdsaleTokenAmount, crowdsaleEthAmount) = calculateCrowdsale(newContribution.sub(communityEthAmount));
+    var (crowdsaleTokenAmount, crowdsaleEthAmount) = calculateCrowdsale(newContribution.sub(communityEthAmount));
 
     // add up crowdsale + community tokens
     uint256 tokenAmount = crowdsaleTokenAmount.add(communityTokenAmount);
