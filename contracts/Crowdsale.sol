@@ -71,7 +71,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     require(msg.value != 0);                                         // Throw if value is 0
     require(crowdsaleState != state.crowdsaleEnded);                 // Check if crowdsale has ended
 
-    bool stateChanged = checkCrowdsaleState();                       // Calibrate crowdsale state
+    checkCrowdsaleState();                       // Calibrate crowdsale state
 
     assert((crowdsaleState == state.communityRound && contributorList[msg.sender].isCommunityRoundApproved) ||
             crowdsaleState == state.crowdsaleStarted);
@@ -105,15 +105,12 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Check crowdsale state and calibrate it
   //
-  function checkCrowdsaleState() internal returns (bool) {
-    bool _stateChanged = false;
-
+  function checkCrowdsaleState() internal {
     // end crowdsale once all tokens are sold or run out of time
     if (now > crowdsaleEndDate || tokenSold >= maxTokenSupply) {
       if (crowdsaleState != state.crowdsaleEnded) {
         crowdsaleState = state.crowdsaleEnded;
         CrowdsaleEnded(now);
-        _stateChanged = true;
       }
     }
     else if (now > crowdsaleStartDate) { // move into crowdsale round
@@ -124,7 +121,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
         // change state
         crowdsaleState = state.crowdsaleStarted;
         CrowdsaleStarted(now);
-        _stateChanged = true;
       }
     }
     else if (now > communityRoundStartDate) {
@@ -132,7 +128,6 @@ contract Crowdsale is ReentrancyHandling, Owned{
         if (crowdsaleState != state.communityRound) {
           crowdsaleState = state.communityRound;
           CommunityRoundStarted(now);
-          _stateChanged = true;
         }
       }
       // automatically start crowdsale when all community round tokens are sold out 
@@ -140,12 +135,9 @@ contract Crowdsale is ReentrancyHandling, Owned{
         if (crowdsaleState != state.crowdsaleStarted) {
           crowdsaleState = state.crowdsaleStarted;
           CrowdsaleStarted(now);
-          _stateChanged = true;
         }
       }
     }
-
-    return _stateChanged;
   }
 
   //
