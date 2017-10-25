@@ -6,11 +6,11 @@ import "./Utils/SafeMath.sol";
 import "./Interfaces/IToken.sol";
 import "./Interfaces/IERC20Token.sol";
 
-contract Crowdsale is ReentrancyHandling, Owned{
+contract Crowdsale is ReentrancyHandling, Owned {
 
   using SafeMath for uint256;
   
-  struct ContributorData{
+  struct ContributorData {
     bool isWhiteListed;
     bool isCommunityRoundApproved;
     uint contributionAmount;
@@ -143,10 +143,11 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Issue tokens and return if there is overflow
   //
-  function calculateCommunity(uint256 _newContribution, uint256 _previousContribution) internal returns (uint256) {
+  function calculateCommunity(address _contributor, uint256 _newContribution) internal returns (uint256) {
     uint256 communityEthAmount = 0;
     uint256 communityTokenAmount = 0;
 
+    uint previousContribution = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
     // community round ONLY
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved == true && 
@@ -190,12 +191,11 @@ contract Crowdsale is ReentrancyHandling, Owned{
   //
   // Issue tokens and return if there is overflow
   //
-  function calculateCrowdsale(uint256 _newContribution) internal returns (uint256) {
-    uint256 newContribution = _amount;
-    uint256 crowdsaleEthAmount = 0;
+  function calculateCrowdsale(uint256 _remainingContribution) internal returns (uint256) {
+    uint256 crowdsaleEthAmount = _remainingContribution;
 
     // compute crowdsale tokens
-    uint256 crowdsaleTokenAmount = _newContribution.mul(ethToTokenConversion);
+    uint256 crowdsaleTokenAmount = crowdsaleEthAmount.mul(ethToTokenConversion);
 
     // verify crowdsale tokens do not go over the max cap for crowdsale round
     if (crowdsaleTokenSold.add(crowdsaleTokenAmount) > maxCrowdsaleCap) {
@@ -217,9 +217,7 @@ contract Crowdsale is ReentrancyHandling, Owned{
     uint256 newContribution = _amount;
     uint256 crowdsaleEthAmount = 0;
 
-    uint previousContribution = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
-
-    uint256 (communityTokenAmount, communityEthAmount) = calculateCommunity(newContribution, previousContribution);
+    uint256 (communityTokenAmount, communityEthAmount) = calculateCommunity(_contributor, newContribution);
 
     // compute remaining ETH amount available for purchasing crowdsale tokens
     uint256 (crowdsaleTokenAmount, crowdsaleEthAmount) = calculateCrowdsale(newContribution.sub(communityEthAmount));
