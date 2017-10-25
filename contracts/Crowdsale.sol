@@ -191,7 +191,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
   //
   // Issue tokens and return if there is overflow
   //
-  function calculateCrowdsale(uint256 _remainingContribution) internal returns (uint256) {
+  function calculateCrowdsale(uint256 _remainingContribution) internal returns (uint256, uint256) {
     uint256 crowdsaleEthAmount = _remainingContribution;
 
     // compute crowdsale tokens
