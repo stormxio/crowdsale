@@ -69,7 +69,6 @@ contract Crowdsale is ReentrancyHandling, Owned {
   //
   function() public noReentrancy onlyWhiteListUser onlyLowGasPrice payable {
     require(msg.value != 0);                                         // Throw if value is 0
-    require(crowdsaleState != state.crowdsaleEnded);                 // Check if crowdsale has ended
 
     checkCrowdsaleState();                       // Calibrate crowdsale state
 
@@ -197,10 +196,14 @@ contract Crowdsale is ReentrancyHandling, Owned {
     // compute crowdsale tokens
     uint256 crowdsaleTokenAmount = crowdsaleEthAmount.mul(ethToTokenConversion);
 
+    // determine crowdsale tokens remaining
+    uint256 availableTokenAmount = maxCrowdsaleCap.sub(crowdsaleTokenSold);
+
     // verify crowdsale tokens do not go over the max cap for crowdsale round
-    if (crowdsaleTokenSold.add(crowdsaleTokenAmount) > maxCrowdsaleCap) {
+    if (crowdsaleTokenAmount > availableTokenAmount) {
       // cap the tokens to the max allowed for the crowdsale round
-      crowdsaleTokenAmount = maxCrowdsaleCap.sub(crowdsaleTokenSold);
+      crowdsaleTokenAmount = availableTokenAmount;
+
       // recalculate the corresponding ETH amount
       crowdsaleEthAmount = crowdsaleTokenAmount.div(ethToTokenConversion);
     }
@@ -302,6 +305,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
     require(!ownerHasClaimedCompanyTokens);                     // Check if owner has already claimed tokens
     require(_to == companyAddress);
 
+    tokenSold = tokenSold.add(companyTokens);
     token.mintTokens(_to, companyTokens);                       // Issue company tokens 
     ownerHasClaimedCompanyTokens = true;                        // Block further mints from this method
   }
