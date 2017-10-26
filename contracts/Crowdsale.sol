@@ -41,7 +41,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
   uint256 public tokenSold = 0;
   uint256 public communityTokenSold = 0;
   uint256 public crowdsaleTokenSold = 0;
-  uint256 public ethRaised = 0;
+  uint256 public ethRaisedWithoutCompany = 0;
 
   address public companyAddress;   // company wallet address in cold/hardware storage 
 
@@ -233,7 +233,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
     newContribution = crowdsaleEthAmount.add(communityEthAmount);
     contributorList[_contributor].contributionAmount = contributorList[_contributor].contributionAmount.add(newContribution);
 
-    ethRaised = ethRaised.add(newContribution);                              // Add contribution amount to ETH raised
+    ethRaisedWithoutCompany = ethRaisedWithoutCompany.add(newContribution);                              // Add contribution amount to ETH raised
     tokenSold = tokenSold.add(tokenAmount);                                  // track how many tokens are sold
 
     // compute any refund if applicable
@@ -300,8 +300,8 @@ contract Crowdsale is ReentrancyHandling, Owned {
   //
   function claimCompanyTokens(address _to) public onlyOwner {
     require(!ownerHasClaimedCompanyTokens);                     // Check if owner has already claimed tokens
-    require(_to == companyAddress);
-
+    require(_to == companyAddress);             
+    tokenSold = tokenSold.add(companyTokens); 
     token.mintTokens(_to, companyTokens);                       // Issue company tokens 
     ownerHasClaimedCompanyTokens = true;                        // Block further mints from this method
   }
