@@ -70,12 +70,14 @@ contract Crowdsale is ReentrancyHandling, Owned {
   function() public noReentrancy onlyWhiteListUser onlyLowGasPrice payable {
     require(msg.value != 0);                                         // Throw if value is 0
 
-    checkCrowdsaleState();                       // Calibrate crowdsale state
+    checkCrowdsaleState();                                           // Calibrate crowdsale state
 
     assert((crowdsaleState == state.communityRound && contributorList[msg.sender].isCommunityRoundApproved) ||
             crowdsaleState == state.crowdsaleStarted);
     
     processTransaction(msg.sender, msg.value);                       // Process transaction and issue tokens
+
+    checkCrowdsaleState();                                           // Calibrate crowdsale state
   }
 
   // 
@@ -83,8 +85,6 @@ contract Crowdsale is ReentrancyHandling, Owned {
   //
   function getCrowdsaleState() public returns (uint) {
     uint currentState = 0;
-
-    checkCrowdsaleState();                          // Calibrate crowdsale state
 
     if (crowdsaleState == state.pendingStart) {
       currentState = 1;
