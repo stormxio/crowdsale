@@ -38,9 +38,9 @@ contract Crowdsale is ReentrancyHandling, Owned {
   uint256 maxContribution;
 
 
-  uint256 public tokenSold = 0;
-  uint256 public communityTokenSold = 0;
-  uint256 public crowdsaleTokenSold = 0;
+  uint256 tokenSold = 0;
+  uint256 communityTokenSold = 0;
+  uint256 crowdsaleTokenSold = 0;
   uint256 public ethRaisedWithoutCompany = 0;
 
   address public companyAddress;   // company wallet address in cold/hardware storage 
@@ -69,6 +69,8 @@ contract Crowdsale is ReentrancyHandling, Owned {
   //
   function() public noReentrancy onlyWhiteListUser onlyLowGasPrice payable {
     require(msg.value != 0);                                         // Throw if value is 0
+    require(companyAddress != 0x0);
+    require(token != IToken(0x0));
 
     checkCrowdsaleState();                                           // Calibrate crowdsale state
 
@@ -81,9 +83,9 @@ contract Crowdsale is ReentrancyHandling, Owned {
   }
 
   // 
-  // return crowdsale state
+  // return state of smart contract
   //
-  function getCrowdsaleState() public returns (uint) {
+  function getState() public returns (uint256, uint256, uint) {
     uint currentState = 0;
 
     if (crowdsaleState == state.pendingStart) {
@@ -98,22 +100,15 @@ contract Crowdsale is ReentrancyHandling, Owned {
     else if (crowdsaleState == state.crowdsaleEnded) {
       currentState = 4;
     }
-    return currentState;
-  }
 
-  //
-  // getter function for stormtoken.com to call
-  //
-  function getTokensSold() public returns (uint256, uint256) {
-    return (tokenSold, communityTokenSold);
+    return (tokenSold, communityTokenSold, currentState);
   }
 
   //
   // Check crowdsale state and calibrate it
   //
   function checkCrowdsaleState() internal {
-    // end crowdsale once all tokens are sold or run out of time
-    if (now > crowdsaleEndDate || tokenSold >= maxTokenSupply) {
+    if (now > crowdsaleEndDate || tokenSold >= maxTokenSupply) {  // end crowdsale once all tokens are sold or run out of time
       if (crowdsaleState != state.crowdsaleEnded) {
         crowdsaleState = state.crowdsaleEnded;
         CrowdsaleEnded(now);
@@ -121,11 +116,9 @@ contract Crowdsale is ReentrancyHandling, Owned {
     }
     else if (now > crowdsaleStartDate) { // move into crowdsale round
       if (crowdsaleState != state.crowdsaleStarted) {
-        // apply any remaining tokens from community round to crowdsale round
-        uint256 communityTokenRemaining = maxCommunityCap.sub(communityTokenSold);
+        uint256 communityTokenRemaining = maxCommunityCap.sub(communityTokenSold);  // apply any remaining tokens from community round to crowdsale round
         maxCrowdsaleCap = maxCrowdsaleCap.add(communityTokenRemaining);
-        // change state
-        crowdsaleState = state.crowdsaleStarted;
+        crowdsaleState = state.crowdsaleStarted;  // change state
         CrowdsaleStarted(now);
       }
     }
@@ -136,8 +129,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
           CommunityRoundStarted(now);
         }
       }
-      // automatically start crowdsale when all community round tokens are sold out 
-      else {  
+      else {  // automatically start crowdsale when all community round tokens are sold out 
         if (crowdsaleState != state.crowdsaleStarted) {
           crowdsaleState = state.crowdsaleStarted;
           CrowdsaleStarted(now);
@@ -255,7 +247,6 @@ contract Crowdsale is ReentrancyHandling, Owned {
       _contributor.transfer(refundAmount);                                   // refund contributor amount behind the maximum ETH cap
     }
 
-    require(companyAddress != 0x0);
     companyAddress.transfer(newContribution);                                // send ETH to company
   }
 
