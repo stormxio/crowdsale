@@ -102,6 +102,13 @@ contract Crowdsale is ReentrancyHandling, Owned {
   }
 
   //
+  // getter function for stormtoken.com to call
+  //
+  function getTokensSold() public returns (uint256, uint256) {
+    return (tokenSold, communityTokenSold);
+  }
+
+  //
   // Check crowdsale state and calibrate it
   //
   function checkCrowdsaleState() internal {
