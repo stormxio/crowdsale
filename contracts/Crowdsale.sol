@@ -87,7 +87,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
   // 
   // return state of smart contract
   //
-  function getState() public returns (uint256, uint256, uint) {
+  function getState() public constant returns (uint256, uint256, uint) {
     uint currentState = 0;
 
     if (crowdsaleState == state.pendingStart) {
@@ -148,7 +148,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
     uint256 communityTokenAmount = 0;
 
     uint previousContribution = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
-    
+
     // community round ONLY
     if (crowdsaleState == state.communityRound && 
         contributorList[_contributor].isCommunityRoundApproved && 
