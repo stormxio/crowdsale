@@ -20,7 +20,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
   mapping(address => ContributorData) public contributorList;
 
   enum state { pendingStart, communityRound, crowdsaleStarted, crowdsaleEnded }
-  state public crowdsaleState;
+  state crowdsaleState;
 
   uint communityRoundStartDate;
   uint crowdsaleStartDate;
@@ -29,6 +29,8 @@ contract Crowdsale is ReentrancyHandling, Owned {
   event CommunityRoundStarted(uint timestamp);
   event CrowdsaleStarted(uint timestamp);
   event CrowdsaleEnded(uint timestamp);
+  // TESTING ONLY
+  event Debug(string msg, uint value);
 
   IToken token = IToken(0x0);
   uint ethToTokenConversion;
@@ -148,6 +150,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
     uint256 communityTokenAmount = 0;
 
     uint previousContribution = contributorList[_contributor].contributionAmount;  // retrieve previous contributions
+    Debug("Community: previous contribution", previousContribution);
 
     // community round ONLY
     if (crowdsaleState == state.communityRound && 
@@ -160,9 +163,11 @@ contract Crowdsale is ReentrancyHandling, Owned {
         if (communityEthAmount > availableEthAmount) {
           communityEthAmount = availableEthAmount;
         }
+        Debug("Community: eth amount", communityEthAmount);
 
         // compute community tokens without bonus
         communityTokenAmount = communityEthAmount.mul(ethToTokenConversion);
+        Debug("Community: token amount", communityTokenAmount);
 
         uint256 availableTokenAmount = maxCommunityWithoutBonusCap.sub(communityTokenWithoutBonusSold);
 
@@ -173,19 +178,25 @@ contract Crowdsale is ReentrancyHandling, Owned {
           // recalculate the corresponding ETH amount
           communityEthAmount = communityTokenAmount.div(ethToTokenConversion);
         }
+        Debug("Community: token amount", communityTokenAmount);
+        Debug("Community: eth amount", communityEthAmount);
 
         // track tokens sold during community round
         communityTokenWithoutBonusSold = communityTokenWithoutBonusSold.add(communityTokenAmount);
+        Debug("Community: tokens without bonus sold", communityTokenWithoutBonusSold);
 
         // compute bonus tokens
         uint256 bonusTokenAmount = communityTokenAmount.mul(15);
         bonusTokenAmount = bonusTokenAmount.div(100);
+        Debug("Community: bonus amount", bonusTokenAmount);
 
         // add bonus to community tokens
         communityTokenAmount = communityTokenAmount.add(bonusTokenAmount);
+        Debug("Community: token + bonus amount", communityTokenAmount);
 
         // track tokens sold during community round
         communityTokenSold = communityTokenSold.add(communityTokenAmount);
+        Debug("Community: token sold", communityTokenSold);
     }
 
     return (communityTokenAmount, communityEthAmount);
@@ -195,24 +206,30 @@ contract Crowdsale is ReentrancyHandling, Owned {
   // Issue tokens and return if there is overflow
   //
   function calculateCrowdsale(uint256 _remainingContribution) internal returns (uint256, uint256) {
+    Debug("Crowdsale: remaining contribution", _remainingContribution);
     uint256 crowdsaleEthAmount = _remainingContribution;
 
     // compute crowdsale tokens
     uint256 crowdsaleTokenAmount = crowdsaleEthAmount.mul(ethToTokenConversion);
+    Debug("Crowdsale: token amount", crowdsaleTokenAmount);
 
     // determine crowdsale tokens remaining
     uint256 availableTokenAmount = maxCrowdsaleCap.sub(crowdsaleTokenSold);
+    Debug("Crowdsale: available tokens", availableTokenAmount);
 
     // verify crowdsale tokens do not go over the max cap for crowdsale round
     if (crowdsaleTokenAmount > availableTokenAmount) {
       // cap the tokens to the max allowed for the crowdsale round
       crowdsaleTokenAmount = availableTokenAmount;
+      Debug("Crowdsale: update token amount", crowdsaleTokenAmount);
 
       // recalculate the corresponding ETH amount
       crowdsaleEthAmount = crowdsaleTokenAmount.div(ethToTokenConversion);
+      Debug("Crowdsale: update eth amount", crowdsaleEthAmount);
     }
     // track tokens sold during crowdsale round
     crowdsaleTokenSold = crowdsaleTokenSold.add(crowdsaleTokenAmount);
+    Debug("Crowdsale: crowdsaleTokenSold", crowdsaleTokenSold);
 
     return (crowdsaleTokenAmount, crowdsaleEthAmount);
   }
@@ -221,14 +238,21 @@ contract Crowdsale is ReentrancyHandling, Owned {
   // Issue tokens and return if there is overflow
   //
   function processTransaction(address _contributor, uint256 _amount) internal {
+    Debug("amount", _amount);
+
     uint256 newContribution = _amount;
     var (communityTokenAmount, communityEthAmount) = calculateCommunity(_contributor, newContribution);
+    Debug("community token", communityTokenAmount);
+    Debug("community eth", communityEthAmount);
 
     // compute remaining ETH amount available for purchasing crowdsale tokens
     var (crowdsaleTokenAmount, crowdsaleEthAmount) = calculateCrowdsale(newContribution.sub(communityEthAmount));
+    Debug("crowdsale token", crowdsaleTokenAmount);
+    Debug("crowdsale eth", crowdsaleEthAmount);
 
     // add up crowdsale + community tokens
     uint256 tokenAmount = crowdsaleTokenAmount.add(communityTokenAmount);
+    Debug("token amount", tokenAmount);
 
     assert(tokenAmount > 0);
 
@@ -237,22 +261,28 @@ contract Crowdsale is ReentrancyHandling, Owned {
 
     // log token issuance
     contributorList[_contributor].tokensIssued = contributorList[_contributor].tokensIssued.add(tokenAmount);                
+    Debug("total tokens issued to user", contributorList[_contributor].tokensIssued);
 
     // Add contribution amount to existing contributor
     newContribution = crowdsaleEthAmount.add(communityEthAmount);
     contributorList[_contributor].contributionAmount = contributorList[_contributor].contributionAmount.add(newContribution);
+    Debug("total user contribution", contributorList[_contributor].contributionAmount);
 
     ethRaisedWithoutCompany = ethRaisedWithoutCompany.add(newContribution);                              // Add contribution amount to ETH raised
+    Debug("tokenSold (before)", tokenSold);
     tokenSold = tokenSold.add(tokenAmount);                                  // track how many tokens are sold
+    Debug("tokenSold (after)", tokenSold);
 
     // compute any refund if applicable
     uint256 refundAmount = _amount.sub(newContribution);
+    Debug("refund amount", refundAmount);
 
     if (refundAmount > 0) {
       _contributor.transfer(refundAmount);                                   // refund contributor amount behind the maximum ETH cap
     }
 
     companyAddress.transfer(newContribution);                                // send ETH to company
+    Debug("eth transfered to company", newContribution);
   }
 
   //

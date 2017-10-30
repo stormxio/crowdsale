@@ -12,13 +12,13 @@ contract StormCrowdsale is Crowdsale {
 
     ethToTokenConversion = 26950;           // 1 ETH == 26,950 STORM tokens
 
-    maxTokenSupply = 10000000000;           // 10,000,000,000
-    companyTokens = 5799117100;             // allocation to company, private presale and users (marketing)
+    maxTokenSupply = 10000000000 ether;           // 10,000,000,000
+    companyTokens = 5799117100 ether;             // allocation to company, private presale and users (marketing)
 
-    maxCommunityWithoutBonusCap = 945000000;
-    maxCommunityCap = 1086750000;           // 945,000,000 with 15% bonus of 141,750,000
-    maxCrowdsaleCap = 3114132900;           // tokens allocated to crowdsale 
+    maxCommunityWithoutBonusCap = 945000000 ether;
+    maxCommunityCap = 1086750000 ether;           // 945,000,000 with 15% bonus of 141,750,000
+    maxCrowdsaleCap = 3114132900 ether;           // tokens allocated to crowdsale 
 
-    maxContribution = 100;                  // maximum contribution during community round
+    maxContribution = 100 ether;                  // maximum contribution during community round
   }
 }
