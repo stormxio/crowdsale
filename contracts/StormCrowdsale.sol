@@ -4,13 +4,13 @@ import "./Crowdsale.sol";
 
 contract StormCrowdsale is Crowdsale {
   function StormCrowdsale() public {
-    communityRoundStartDate = 1508504400;   // Oct 20, 2017 @ 6am PST
-    crowdsaleStartDate = 1508590800;        // 24 hours later
-    crowdsaleEndDate = 1511182800;          // Nov 20, 2017 @ 6am PST
+    communityRoundStartDate = 1510059600;                       // Nov 7, 2017 @ 6am PST
+    crowdsaleStartDate = communityRoundStartDate + 24 hours;    // 24 hours later
+    crowdsaleEndDate = crowdsaleStartDate + 30 days;            // 30 days later
 
     crowdsaleState = state.pendingStart;
 
-    ethToTokenConversion = 26950;           // 1 ETH == 26,950 STORM tokens
+    ethToTokenConversion = 26950;                 // 1 ETH == 26,950 STORM tokens
 
     maxTokenSupply = 10000000000 ether;           // 10,000,000,000
     companyTokens = 5799117100 ether;             // allocation to company, private presale and users (marketing)
