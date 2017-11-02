@@ -13,8 +13,8 @@ contract Crowdsale is ReentrancyHandling, Owned {
   struct ContributorData {
     bool isWhiteListed;
     bool isCommunityRoundApproved;
-    uint contributionAmount;
-    uint tokensIssued;
+    uint256 contributionAmount;
+    uint256 tokensIssued;
   }
 
   mapping(address => ContributorData) public contributorList;
@@ -22,9 +22,9 @@ contract Crowdsale is ReentrancyHandling, Owned {
   enum state { pendingStart, communityRound, crowdsaleStarted, crowdsaleEnded }
   state crowdsaleState;
 
-  uint communityRoundStartDate;
-  uint crowdsaleStartDate;
-  uint crowdsaleEndDate;
+  uint public communityRoundStartDate;
+  uint public crowdsaleStartDate;
+  uint public crowdsaleEndDate;
 
   event CommunityRoundStarted(uint timestamp);
   event CrowdsaleStarted(uint timestamp);
@@ -64,7 +64,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
 
   // limit gas price to 50 Gwei (about 5-10x the normal amount)
   modifier onlyLowGasPrice {
-	  require(tx.gasprice <= 50*10**9);
+	  require(tx.gasprice <= 50*10**9 wei);
 	  _;
   }
 
