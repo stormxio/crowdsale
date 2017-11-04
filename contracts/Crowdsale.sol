@@ -47,7 +47,7 @@ contract Crowdsale is ReentrancyHandling, Owned {
   uint256 crowdsaleTokenSold = 0;
   uint256 public ethRaisedWithoutCompany = 0;
 
-  address public companyAddress;   // company wallet address in cold/hardware storage 
+  address companyAddress;   // company wallet address in cold/hardware storage 
 
   uint maxTokenSupply;
   uint companyTokens;
@@ -336,26 +336,26 @@ contract Crowdsale is ReentrancyHandling, Owned {
   //
   // Claims company tokens
   //
-  function claimCompanyTokens(address _to) public onlyOwner {
+  function claimCompanyTokens() public onlyOwner {
     require(!ownerHasClaimedCompanyTokens);                     // Check if owner has already claimed tokens
-    require(_to == companyAddress);             
+    require(companyAddress != 0x0);
     
     tokenSold = tokenSold.add(companyTokens); 
-    token.mintTokens(_to, companyTokens);                       // Issue company tokens 
+    token.mintTokens(companyAddress, companyTokens);            // Issue company tokens 
     ownerHasClaimedCompanyTokens = true;                        // Block further mints from this method
   }
 
   //
   // Claim remaining tokens when crowdsale ends
   //
-  function claimRemainingTokens(address _to) public onlyOwner {
+  function claimRemainingTokens() public onlyOwner {
     checkCrowdsaleState();                                        // Calibrate crowdsale state
     require(crowdsaleState == state.crowdsaleEnded);              // Check crowdsale has ended
     require(!ownerHasClaimedTokens);                              // Check if owner has already claimed tokens
-    require(_to == companyAddress);
-    uint256 remainingTokens = maxTokenSupply.sub(token.totalSupply());
+    require(companyAddress != 0x0);
 
-    token.mintTokens(_to, remainingTokens);                       // Issue tokens to company
+    uint256 remainingTokens = maxTokenSupply.sub(token.totalSupply());
+    token.mintTokens(companyAddress, remainingTokens);            // Issue tokens to company
     ownerHasClaimedTokens = true;                                 // Block further mints from this method
   }
 
