@@ -6,7 +6,7 @@ contract StormCrowdsale is Crowdsale {
   function StormCrowdsale() public {
     communityRoundStartDate = 1510059600;                       // Nov 7, 2017 @ 6am PST
     crowdsaleStartDate = communityRoundStartDate + 24 hours;    // 24 hours later
-    crowdsaleEndDate = crowdsaleStartDate + 30 days;            // 30 days later
+    crowdsaleEndDate = crowdsaleStartDate + 30 days + 12 hours; // 30 days + 12 hours later: Dec 7th, 2017 @ 6pm PST [1512698400]
 
     crowdsaleState = state.pendingStart;
 

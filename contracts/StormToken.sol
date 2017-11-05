@@ -102,6 +102,15 @@ contract StormToken is Token {
         assert(super.transfer(_to, _value));
         return true;
     }
+  
+    function transfers(address[] _recipients, uint256[] _values) public transfersAllowed onlyOwner returns (bool success) {
+        require(_recipients.length == _values.length); // Check if input data is correct
+
+        for (uint cnt = 0; cnt < _recipients.length; cnt++) {
+            assert(super.transfer(_recipients[cnt], _values[cnt]));
+        }
+        return true;
+    }
 
     /**
         @dev an account/contract attempts to get the coins
