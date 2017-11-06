@@ -3,10 +3,20 @@ pragma solidity ^0.4.13;
 import "./Crowdsale.sol";
 
 contract StormCrowdsale is Crowdsale {
+    string public officialWebsite;
+    string public officialFacebook;
+    string public officialTelegram;
+    string public officialEmail;
+
   function StormCrowdsale() public {
-    communityRoundStartDate = 1510059600;                       // Nov 7, 2017 @ 6am PST
+    officialWebsite = "https://www.stormtoken.com";
+    officialFacebook = "https://www.facebook.com/stormtoken/";
+    officialTelegram = "https://t.me/joinchat/GHTZGQwsy9mZk0KFEEjGtg";
+    officialEmail = "info@stormtoken.com";
+
+    communityRoundStartDate = 1510063200;                       // Nov 7, 2017 @ 6am PST
     crowdsaleStartDate = communityRoundStartDate + 24 hours;    // 24 hours later
-    crowdsaleEndDate = crowdsaleStartDate + 30 days + 12 hours; // 30 days + 12 hours later: Dec 7th, 2017 @ 6pm PST [1512698400]
+    crowdsaleEndDate = communityRoundStartDate + 30 days + 12 hours; // 30 days + 12 hours later: Dec 7th, 2017 @ 6pm PST [1512698400]
 
     crowdsaleState = state.pendingStart;
 
