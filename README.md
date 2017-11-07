@@ -3,6 +3,11 @@ This repository contains the smart contracts for the crowdsale of STORM tokens d
 
 Auditing of the smart contracts performed by the HOSHO GROUP (https://hosho.io).
 
+# Architecture
+The following diagram illustrates the design and dependencies between the smart contracts. 
+
+![STORM smart contract architecture](https://github.com/StormX-Inc/crowdsale/blob/Gold/images/architecture.png)
+
 # Smart Contract Design
 
 The smart contracts are composed of two main smart contracts: StormCrowdsale and StormToken. 
