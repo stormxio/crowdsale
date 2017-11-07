@@ -2,8 +2,6 @@ pragma solidity ^0.4.4;
 
 contract Migrations {
   address public owner;
-
-  // function with signature `last_completed_migration()`, returning a uint, is generated.
   uint public last_completed_migration;
 
   modifier restricted() {
