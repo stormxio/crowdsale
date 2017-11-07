@@ -1,9 +1,10 @@
-# StormX crowdsale
+# STORM Crowdsale
 This repository contains the smart contracts for the crowdsale of STORM tokens developed by Rui Maximo and co-authored by Reo Shibatsuji, recommendations provided by Yudi Levi. Test cases were developed by Reo Shibatsuji. 
 
 Auditing of the smart contracts performed by the HOSHO GROUP (https://hosho.io).
 
-Smart Contract Design
+# Smart Contract Design
+
 The smart contracts are composed of two main smart contracts: StormCrowdsale and StormToken. 
 
 The StormToken inherits from the Token, which is an ERC-20 smart contract that mints tokens and allows users to transfer tokens. The StormToken adds additional logic specific to Bancor and a bulk transfers function to make it easier to pay out STORM PLAY users (previously BitMaker). Wallets such as Jaxx, MyEtherWallet (i.e. MEW) call the StormToken smart contract to show users how many STORM tokens they own.
@@ -23,10 +24,12 @@ When the community appreciation period starts, only registered participants appr
 A community appreciation approved participant can send any amount of ETH. If the participant sends more than 100 ETH (say 500 ETH), only 100 ETH worth of tokens plus the 15% bonus from the community appreciation period will be minted, and the remaining ETH (i.e. 400 ETH) will be immediately applied to purchase crowdsale tokens. The tokens are minted immediately, but will be locked until the crowdsale ends – meaning users cannot transfer (i.e. sell) their tokens. 
 
 There are several mutually exclusive sub-scenarios:
+
 •   If the community appreciation tokens are sold out, then all of the user’s ETH (i.e. 500 ETH) will be applied to purchasing crowdsale tokens. 
 •   If the crowdsale period is sold out, then whatever is left over from buying community appreciation tokens (i.e. 400 ETH) is refunded to the user.
 
 The StormCrowdsale smart contract changes state from community appreciation period to the crowdsale period when one of the following conditions are met:
+
 •   24 hours has elapsed from the start of the community appreciation period (Nov 8th 2017 @ 6am PST).
 •   All the community appreciation tokens (including the 15% bonus amount) are sold out.
 
