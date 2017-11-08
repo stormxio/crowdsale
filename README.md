@@ -1,5 +1,5 @@
 # STORM Crowdsale
-This repository contains the smart contracts for the crowdsale of STORM tokens developed by [Rui Maximo](https://www.linkedin.com/in/maximo/) and co-authored by [Reo Shibatsuji](https://www.linkedin.com/in/reo-shibatsuji-a22716132/), recommendations provided by [Yudi Levi](https://www.linkedin.com/in/yudi-levi-4bb91911/). Test cases were developed by Reo Shibatsuji. 
+This repository contains the smart contracts for the crowdsale of STORM tokens developed by [Rui Maximo](https://www.linkedin.com/in/maximo/) and co-authored by [Reo Shibatsuji](https://www.linkedin.com/in/reo-shibatsuji-a22716132/), recommendations provided by [Yudi Levi](https://www.linkedin.com/in/yudi-levi-4bb91911/). Test cases were developed by [Reo Shibatsuji](https://www.linkedin.com/in/reo-shibatsuji-a22716132/). 
 
 Auditing of the smart contracts performed by the [HOSHO GROUP](https://hosho.io).
 
