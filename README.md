@@ -3,6 +3,25 @@ This repository contains the smart contracts for the crowdsale of STORM tokens d
 
 Auditing of the smart contracts performed by the HOSHO GROUP (https://hosho.io).
 
+# Resources
+
+Official Site: https://stormtoken.com
+
+Link to 28x28png STORM icon: https://github.com/StormX-Inc/crowdsale/blob/master/images/LOGO.png
+
+Official Contact Email Address: info@stormtoken.com
+
+Link to blog: https://blog.stormtoken.com/
+
+Link to reddit: https://www.reddit.com/r/stormtoken/
+
+Link to facebook: https://www.facebook.com/stormtoken
+
+Link to twitter: https://twitter.com/Storm_Token
+
+Link to bitcointalk: https://bitcointalk.org/index.php?topic=2006999.msg21584885#msg21584885
+
+
 # Architecture
 The following diagram illustrates the design and dependencies between the smart contracts. 
 
