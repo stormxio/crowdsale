@@ -7,7 +7,7 @@ Auditing of the smart contracts performed by the [HOSHO GROUP](https://hosho.io)
 
 Official Site: https://stormtoken.com
 
-Link to 28x28png STORM icon: https://github.com/StormX-Inc/crowdsale/blob/master/images/LOGO.png
+Link to 28x28png STORM icon: https://github.com/stormxio/crowdsale/blob/master/images/LOGO.png
 
 Official Contact Email Address: info@stormtoken.com
 
@@ -25,7 +25,7 @@ Link to bitcointalk: https://bitcointalk.org/index.php?topic=2006999.msg21584885
 # Architecture
 The following diagram illustrates the design and dependencies between the smart contracts. 
 
-![STORM smart contract architecture](https://github.com/StormX-Inc/crowdsale/blob/Gold/images/architecture.png)
+![STORM smart contract architecture](https://github.com/stormxio/crowdsale/blob/Gold/images/architecture.png)
 
 # Smart Contract Design
 
